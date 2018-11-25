@@ -9,6 +9,10 @@
 ```
 git clone https://github.com/Chatie/wechaty.git
 git clone https://github.com/Chatie/wechaty-puppet.git
+cd wechaty
+rm -rf .git
+cd wechaty-puppet
+rm -rf .git
 ```
 
 2. Change dir
