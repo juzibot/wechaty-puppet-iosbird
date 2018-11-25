@@ -1,7 +1,7 @@
 {
-  "name": "wechaty-puppet-mock",
+  "name": "wechaty-puppet-iosbird",
   "version": "0.15.2",
-  "description": "Puppet Mocker for Wechaty",
+  "description": "Puppet Iosbird for Wechaty",
   "directories": {
     "test": "tests"
   },
@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Chatie/wechaty-puppet-mock.git"
+    "url": "git+https://github.com/botorange/wechaty-puppet-iosbird.git"
   },
   "keywords": [
     "chatie",
@@ -41,14 +41,14 @@
     "wechat",
     "sdk",
     "puppet",
-    "mock"
+    "iosbird"
   ],
-  "author": "Huan LI <zixia@zixia.net>",
+  "author": "Rui LI <grace@botorange.come>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Chatie/wechaty-puppet-mock/issues"
+    "url": "https://github.com/botorange/wechaty-puppet-iosbird/issues"
   },
-  "homepage": "https://github.com/Chatie/wechaty-puppet-mock#readme",
+  "homepage": "https://github.com/botorange/wechaty-puppet-iosbird#readme",
   "devDependencies": {
     "@types/blue-tape": "^0.1.31",
     "@types/node": "^10.3.6",
