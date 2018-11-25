@@ -1,4 +1,4 @@
-export * from './puppet-mock'
+export * from './puppet-iosbird'
 export {
   VERSION,
   log,

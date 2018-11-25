@@ -1,7 +1,7 @@
-import { PuppetMock } from '../src/puppet-mock'
+import { PuppetIosbird } from '../src/puppet-iosbird'
 import { Wechaty    } from '../wechaty/src'
 
-const puppet  = new PuppetMock()
+const puppet  = new PuppetIosbird()
 const bot = new Wechaty({ puppet })
 
 bot

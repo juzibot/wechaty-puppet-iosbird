@@ -51,24 +51,24 @@ import {
   VERSION,
 }                                   from './config'
 
-export interface MockContactRawPayload {
+export interface IosbirdContactRawPayload {
   name : string,
 }
 
-export interface MockMessageRawPayload {
+export interface IosbirdMessageRawPayload {
   id   : string,
   from : string,
   to   : string,
   text : string
 }
 
-export interface MockRoomRawPayload {
+export interface IosbirdRoomRawPayload {
   topic      : string,
   memberList : string[],
   ownerId    : string,
 }
 
-export class PuppetMock extends Puppet {
+export class PuppetIosbird extends Puppet {
 
   public static readonly VERSION = VERSION
 
@@ -81,7 +81,7 @@ export class PuppetMock extends Puppet {
   }
 
   public async start (): Promise<void> {
-    log.verbose('PuppetMock', `start()`)
+    log.verbose('PuppetIosbird', `start()`)
 
     this.state.on('pending')
     // await some tasks...
@@ -93,28 +93,28 @@ export class PuppetMock extends Puppet {
     // const user = this.Contact.load(this.id)
     this.emit('login', this.id)
 
-    const MOCK_MSG_ID = 'mockid'
+    const MOCK_MSG_ID = 'iosbirdid'
     this.cacheMessagePayload.set(MOCK_MSG_ID, {
       fromId    : 'xxx',
       id        : MOCK_MSG_ID,
-      text      : 'mock text',
+      text      : 'iosbird text',
       timestamp : Date.now(),
       toId      : 'xxx',
       type      : MessageType.Text,
     })
 
     this.loopTimer = setInterval(() => {
-      log.verbose('PuppetMock', `start() setInterval() pretending received a new message: ${MOCK_MSG_ID}`)
+      log.verbose('PuppetIosbird', `start() setInterval() pretending received a new message: ${MOCK_MSG_ID}`)
       this.emit('message', MOCK_MSG_ID)
     }, 3000)
 
   }
 
   public async stop (): Promise<void> {
-    log.verbose('PuppetMock', 'stop()')
+    log.verbose('PuppetIosbird', 'stop()')
 
     if (this.state.off()) {
-      log.warn('PuppetMock', 'stop() is called on a OFF puppet. await ready(off) and return.')
+      log.warn('PuppetIosbird', 'stop() is called on a OFF puppet. await ready(off) and return.')
       await this.state.ready('off')
       return
     }
@@ -130,7 +130,7 @@ export class PuppetMock extends Puppet {
   }
 
   public async logout (): Promise<void> {
-    log.verbose('PuppetMock', 'logout()')
+    log.verbose('PuppetIosbird', 'logout()')
 
     if (!this.id) {
       throw new Error('logout before login?')
@@ -149,17 +149,17 @@ export class PuppetMock extends Puppet {
    *
    */
   public async contactSelfQrcode (): Promise<string> {
-    log.verbose('PuppetMock', 'contactSelfQrcode()')
+    log.verbose('PuppetIosbird', 'contactSelfQrcode()')
     return CHATIE_OFFICIAL_ACCOUNT_QRCODE
   }
 
   public async contactSelfName (name: string): Promise<void> {
-    log.verbose('PuppetMock', 'contactSelfName(%s)', name)
+    log.verbose('PuppetIosbird', 'contactSelfName(%s)', name)
     return
   }
 
   public async contactSelfSignature (signature: string): Promise<void> {
-    log.verbose('PuppetMock', 'contactSelfSignature(%s)', signature)
+    log.verbose('PuppetIosbird', 'contactSelfSignature(%s)', signature)
   }
 
   /**
@@ -171,16 +171,16 @@ export class PuppetMock extends Puppet {
   public contactAlias (contactId: string, alias: string | null): Promise<void>
 
   public async contactAlias (contactId: string, alias?: string | null): Promise<void | string> {
-    log.verbose('PuppetMock', 'contactAlias(%s, %s)', contactId, alias)
+    log.verbose('PuppetIosbird', 'contactAlias(%s, %s)', contactId, alias)
 
     if (typeof alias === 'undefined') {
-      return 'mock alias'
+      return 'iosbird alias'
     }
     return
   }
 
   public async contactList (): Promise<string[]> {
-    log.verbose('PuppetMock', 'contactList()')
+    log.verbose('PuppetIosbird', 'contactList()')
 
     return []
   }
@@ -198,7 +198,7 @@ export class PuppetMock extends Puppet {
   public async contactAvatar (contactId: string, file: FileBox) : Promise<void>
 
   public async contactAvatar (contactId: string, file?: FileBox): Promise<void | FileBox> {
-    log.verbose('PuppetMock', 'contactAvatar(%s)', contactId)
+    log.verbose('PuppetIosbird', 'contactAvatar(%s)', contactId)
 
     /**
      * 1. set
@@ -214,22 +214,22 @@ export class PuppetMock extends Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  public async contactRawPayload (id: string): Promise<MockContactRawPayload> {
-    log.verbose('PuppetMock', 'contactRawPayload(%s)', id)
-    const rawPayload: MockContactRawPayload = {
-      name : 'mock name',
+  public async contactRawPayload (id: string): Promise<IosbirdContactRawPayload> {
+    log.verbose('PuppetIosbird', 'contactRawPayload(%s)', id)
+    const rawPayload: IosbirdContactRawPayload = {
+      name : 'iosbird name',
     }
     return rawPayload
   }
 
-  public async contactRawPayloadParser (rawPayload: MockContactRawPayload): Promise<ContactPayload> {
-    log.verbose('PuppetMock', 'contactRawPayloadParser(%s)', rawPayload)
+  public async contactRawPayloadParser (rawPayload: IosbirdContactRawPayload): Promise<ContactPayload> {
+    log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
 
     const payload: ContactPayload = {
-      avatar : 'mock-avatar-data',
+      avatar : 'iosbird-avatar-data',
       gender : ContactGender.Unknown,
       id     : 'id',
-      name   : 'mock-name',
+      name   : 'iosbird-name',
       type   : ContactType.Unknown,
     }
     return payload
@@ -243,36 +243,36 @@ export class PuppetMock extends Puppet {
   public async messageFile (id: string): Promise<FileBox> {
     return FileBox.fromBase64(
       'cRH9qeL3XyVnaXJkppBuH20tf5JlcG9uFX1lL2IvdHRRRS9kMMQxOPLKNYIzQQ==',
-      'mock-file' + id + '.txt',
+      'iosbird-file' + id + '.txt',
     )
   }
 
   public async messageUrl (messageId: string)  : Promise<UrlLinkPayload> {
-    log.verbose('PuppetMock', 'messageUrl(%s)')
+    log.verbose('PuppetIosbird', 'messageUrl(%s)')
 
     return {
-      title : 'mock title',
-      url   : 'https://mock.url',
+      title : 'iosbird title',
+      url   : 'https://iosbird.url',
     }
   }
 
-  public async messageRawPayload (id: string): Promise<MockMessageRawPayload> {
-    log.verbose('PuppetMock', 'messageRawPayload(%s)', id)
-    const rawPayload: MockMessageRawPayload = {
+  public async messageRawPayload (id: string): Promise<IosbirdMessageRawPayload> {
+    log.verbose('PuppetIosbird', 'messageRawPayload(%s)', id)
+    const rawPayload: IosbirdMessageRawPayload = {
       from : 'from_id',
       id   : 'id',
-      text : 'mock message text',
+      text : 'iosbird message text',
       to   : 'to_id',
     }
     return rawPayload
   }
 
-  public async messageRawPayloadParser (rawPayload: MockMessageRawPayload): Promise<MessagePayload> {
-    log.verbose('PuppetMock', 'messagePayload(%s)', rawPayload)
+  public async messageRawPayloadParser (rawPayload: IosbirdMessageRawPayload): Promise<MessagePayload> {
+    log.verbose('PuppetIosbird', 'messagePayload(%s)', rawPayload)
     const payload: MessagePayload = {
       fromId    : 'xxx',
       id        : rawPayload.id,
-      text      : 'mock message text',
+      text      : 'iosbird message text',
       timestamp : Date.now(),
       toId      : this.selfId(),
       type      : MessageType.Text,
@@ -284,26 +284,26 @@ export class PuppetMock extends Puppet {
     receiver : Receiver,
     text     : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'messageSend(%s, %s)', receiver, text)
+    log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, text)
   }
 
   public async messageSendFile (
     receiver : Receiver,
     file     : FileBox,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'messageSend(%s, %s)', receiver, file)
+    log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, file)
   }
 
   public async messageSendContact (
     receiver  : Receiver,
     contactId : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'messageSend("%s", %s)', JSON.stringify(receiver), contactId)
+    log.verbose('PuppetIosbird', 'messageSend("%s", %s)', JSON.stringify(receiver), contactId)
     return
   }
 
   public async messageSendUrl (to: Receiver, urlLinkPayload: UrlLinkPayload) : Promise<void> {
-    log.verbose('PuppetMock', 'messageSendUrl("%s", %s)',
+    log.verbose('PuppetIosbird', 'messageSendUrl("%s", %s)',
                               JSON.stringify(to),
                               JSON.stringify(urlLinkPayload),
                 )
@@ -313,7 +313,7 @@ export class PuppetMock extends Puppet {
     receiver  : Receiver,
     messageId : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'messageForward(%s, %s)',
+    log.verbose('PuppetIosbird', 'messageForward(%s, %s)',
                               receiver,
                               messageId,
               )
@@ -326,33 +326,33 @@ export class PuppetMock extends Puppet {
    */
   public async roomRawPayload (
     id: string,
-  ): Promise<MockRoomRawPayload> {
-    log.verbose('PuppetMock', 'roomRawPayload(%s)', id)
+  ): Promise<IosbirdRoomRawPayload> {
+    log.verbose('PuppetIosbird', 'roomRawPayload(%s)', id)
 
-    const rawPayload: MockRoomRawPayload = {
+    const rawPayload: IosbirdRoomRawPayload = {
       memberList: [],
-      ownerId   : 'mock_room_owner_id',
-      topic     : 'mock topic',
+      ownerId   : 'iosbird_room_owner_id',
+      topic     : 'iosbird topic',
     }
     return rawPayload
   }
 
   public async roomRawPayloadParser (
-    rawPayload: MockRoomRawPayload,
+    rawPayload: IosbirdRoomRawPayload,
   ): Promise<RoomPayload> {
-    log.verbose('PuppetMock', 'roomRawPayloadParser(%s)', rawPayload)
+    log.verbose('PuppetIosbird', 'roomRawPayloadParser(%s)', rawPayload)
 
     const payload: RoomPayload = {
       id           : 'id',
       memberIdList : [],
-      topic        : 'mock topic',
+      topic        : 'iosbird topic',
     }
 
     return payload
   }
 
   public async roomList (): Promise<string[]> {
-    log.verbose('PuppetMock', 'roomList()')
+    log.verbose('PuppetIosbird', 'roomList()')
 
     return []
   }
@@ -361,18 +361,18 @@ export class PuppetMock extends Puppet {
     roomId    : string,
     contactId : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'roomDel(%s, %s)', roomId, contactId)
+    log.verbose('PuppetIosbird', 'roomDel(%s, %s)', roomId, contactId)
   }
 
   public async roomAvatar (roomId: string): Promise<FileBox> {
-    log.verbose('PuppetMock', 'roomAvatar(%s)', roomId)
+    log.verbose('PuppetIosbird', 'roomAvatar(%s)', roomId)
 
     const payload = await this.roomPayload(roomId)
 
     if (payload.avatar) {
       return FileBox.fromUrl(payload.avatar)
     }
-    log.warn('PuppetMock', 'roomAvatar() avatar not found, use the chatie default.')
+    log.warn('PuppetIosbird', 'roomAvatar() avatar not found, use the chatie default.')
     return qrCodeForChatie()
   }
 
@@ -380,7 +380,7 @@ export class PuppetMock extends Puppet {
     roomId    : string,
     contactId : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'roomAdd(%s, %s)', roomId, contactId)
+    log.verbose('PuppetIosbird', 'roomAdd(%s, %s)', roomId, contactId)
   }
 
   public async roomTopic (roomId: string)                : Promise<string>
@@ -390,10 +390,10 @@ export class PuppetMock extends Puppet {
     roomId: string,
     topic?: string,
   ): Promise<void | string> {
-    log.verbose('PuppetMock', 'roomTopic(%s, %s)', roomId, topic)
+    log.verbose('PuppetIosbird', 'roomTopic(%s, %s)', roomId, topic)
 
     if (typeof topic === 'undefined') {
-      return 'mock room topic'
+      return 'iosbird room topic'
     }
     return
   }
@@ -402,35 +402,35 @@ export class PuppetMock extends Puppet {
     contactIdList : string[],
     topic         : string,
   ): Promise<string> {
-    log.verbose('PuppetMock', 'roomCreate(%s, %s)', contactIdList, topic)
+    log.verbose('PuppetIosbird', 'roomCreate(%s, %s)', contactIdList, topic)
 
-    return 'mock_room_id'
+    return 'iosbird_room_id'
   }
 
   public async roomQuit (roomId: string): Promise<void> {
-    log.verbose('PuppetMock', 'roomQuit(%s)', roomId)
+    log.verbose('PuppetIosbird', 'roomQuit(%s)', roomId)
   }
 
   public async roomQrcode (roomId: string): Promise<string> {
-    return roomId + ' mock qrcode'
+    return roomId + ' iosbird qrcode'
   }
 
   public async roomMemberList (roomId: string) : Promise<string[]> {
-    log.verbose('PuppetMock', 'roommemberList(%s)', roomId)
+    log.verbose('PuppetIosbird', 'roommemberList(%s)', roomId)
     return []
   }
 
   public async roomMemberRawPayload (roomId: string, contactId: string): Promise<any>  {
-    log.verbose('PuppetMock', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
+    log.verbose('PuppetIosbird', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
     return {}
   }
 
   public async roomMemberRawPayloadParser (rawPayload: any): Promise<RoomMemberPayload>  {
-    log.verbose('PuppetMock', 'roomMemberRawPayloadParser(%s)', rawPayload)
+    log.verbose('PuppetIosbird', 'roomMemberRawPayloadParser(%s)', rawPayload)
     return {
-      avatar    : 'mock-avatar-data',
+      avatar    : 'iosbird-avatar-data',
       id        : 'xx',
-      name      : 'mock-name',
+      name      : 'iosbird-name',
       roomAlias : 'yy',
     }
   }
@@ -442,7 +442,7 @@ export class PuppetMock extends Puppet {
     if (text) {
       return
     }
-    return 'mock announcement for ' + roomId
+    return 'iosbird announcement for ' + roomId
   }
 
   /**
@@ -451,15 +451,15 @@ export class PuppetMock extends Puppet {
    *
    */
   public async roomInvitationAccept (roomInvitationId: string): Promise<void> {
-    log.verbose('PuppetMock', 'roomInvitationAccept(%s)', roomInvitationId)
+    log.verbose('PuppetIosbird', 'roomInvitationAccept(%s)', roomInvitationId)
   }
 
   public async roomInvitationRawPayload (roomInvitationId: string): Promise<any> {
-    log.verbose('PuppetMock', 'roomInvitationRawPayload(%s)', roomInvitationId)
+    log.verbose('PuppetIosbird', 'roomInvitationRawPayload(%s)', roomInvitationId)
   }
 
   public async roomInvitationRawPayloadParser (rawPayload: any): Promise<RoomInvitationPayload> {
-    log.verbose('PuppetMock', 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
+    log.verbose('PuppetIosbird', 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
     return rawPayload
   }
 
@@ -479,23 +479,23 @@ export class PuppetMock extends Puppet {
     contactId : string,
     hello     : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'friendshipAdd(%s, %s)', contactId, hello)
+    log.verbose('PuppetIosbird', 'friendshipAdd(%s, %s)', contactId, hello)
   }
 
   public async friendshipAccept (
     friendshipId : string,
   ): Promise<void> {
-    log.verbose('PuppetMock', 'friendshipAccept(%s)', friendshipId)
+    log.verbose('PuppetIosbird', 'friendshipAccept(%s)', friendshipId)
   }
 
   public ding (data?: string): void {
-    log.silly('PuppetMock', 'ding(%s)', data || '')
+    log.silly('PuppetIosbird', 'ding(%s)', data || '')
     this.emit('dong', data)
     return
   }
 
   public unref (): void {
-    log.verbose('PuppetMock', 'unref()')
+    log.verbose('PuppetIosbird', 'unref()')
     super.unref()
     if (this.loopTimer) {
       this.loopTimer.unref()
@@ -503,4 +503,4 @@ export class PuppetMock extends Puppet {
   }
 }
 
-export default PuppetMock
+export default PuppetIosbird
