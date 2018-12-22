@@ -45,11 +45,14 @@ import {
 }                           from '../wechaty-puppet/src'
 
 import {
+  BOT_ID,
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   log,
   qrCodeForChatie,
   VERSION,
+  WEBSOCKET_SERVER,
 }                                   from './config'
+import { IosbirdWebSocket } from './iosbird-ws'
 
 export interface IosbirdContactRawPayload {
   name : string,
@@ -85,13 +88,18 @@ export class PuppetIosbird extends Puppet {
 
     this.state.on('pending')
     // await some tasks...
-    this.state.on(true)
+    const ws = new IosbirdWebSocket(WEBSOCKET_SERVER, BOT_ID)
+    ws.on('login', (id) => {
+      this.id = id
+      this.emit('login', this.id as string)
+      this.state.on(true)
+    })
+    ws.on('error', (error: Error) => {
+      this.emit('error', error)
+    })
+    await ws.start()
 
-    this.emit('scan', 'https://not-exist.com', 0)
-
-    this.id = 'logined_user_id'
-    // const user = this.Contact.load(this.id)
-    this.emit('login', this.id)
+    // this.emit('scan', 'https://not-exist.com', 0)
 
     const MOCK_MSG_ID = 'iosbirdid'
     this.cacheMessagePayload.set(MOCK_MSG_ID, {
@@ -107,7 +115,6 @@ export class PuppetIosbird extends Puppet {
       log.verbose('PuppetIosbird', `start() setInterval() pretending received a new message: ${MOCK_MSG_ID}`)
       this.emit('message', MOCK_MSG_ID)
     }, 3000)
-
   }
 
   public async stop (): Promise<void> {
