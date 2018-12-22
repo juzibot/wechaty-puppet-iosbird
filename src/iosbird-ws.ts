@@ -4,6 +4,8 @@ import {
   log,
 }                       from './config'
 
+const uuid = require('uuidv4')
+
 export enum Action {
   ENTER             = 'enter',            // 与插件连接成功
   CHAT              = 'chat',             // 收发消息
@@ -27,6 +29,20 @@ export interface IosbirdWebSocketMessage {
   content? : string,   // 消息内容
   to_type? : Type,
   cnt_type?: string,   // 消息格式
+}
+
+export interface IosbirdIOSMessage {
+  action   : string,
+  to_type  : Type,
+  s_type   : Type,
+  id       : string,
+  cnt_type?: string,
+  content  : string,
+  mem_id   : string,
+  u_id     : string,
+  type     : Type,
+  name     : string,
+  msgId    : string,
 }
 
 export class IosbirdWebSocket extends EventEmitter {
@@ -81,6 +97,8 @@ export class IosbirdWebSocket extends EventEmitter {
      */
     this.ws.on('message', (message) => {
       const messagePayload = JSON.parse(message as string)
+      messagePayload.msgId = uuid() as string
+      this.emit('message', messagePayload as IosbirdIOSMessage)
     })
   }
 }

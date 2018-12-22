@@ -87,6 +87,7 @@
     "qr-image": "^3.2.0",
     "quick-lru": "^1.1.0",
     "state-switch": "^0.6.2",
+    "uuidv4": "^2.0.0",
     "watchdog": "^0.8.10",
     "wechaty": "^0.22.4",
     "ws": "^6.1.2"

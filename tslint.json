@@ -1,5 +1,4 @@
 {
-  "extends": ["tslint:recommended", "tslint-config-standard"],
   "rules": {
     "interface-name": [true, "never-prefix"],
     "trailing-comma": true,
