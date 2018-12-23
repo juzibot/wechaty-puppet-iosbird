@@ -67,6 +67,7 @@ export interface IosBirdWebSocketContact {
   allow_owner_approve_value: boolean,
   type                     : Type,
   mute_session             : boolean,
+  name?                    : string,      // 微信名称
 }
 
 export interface IosbirdIOSContactList {

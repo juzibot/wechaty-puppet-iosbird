@@ -17,6 +17,10 @@
  *
  */
 import path  from 'path'
+import os from 'os'
+import fs from 'fs-extra'
+
+import {FlashStoreSync} from 'flash-store'
 
 import {
   FileBox,
@@ -59,18 +63,17 @@ import {
   IosbirdMessagePayload,
   Type,
   IosbirdMessageType,
+  IosBirdWebSocketContact,
 }                                   from './iosbird-ws'
 import { messageType } from './pure-function-helpers/message-type'
 import { isRoomId, isContactId } from './pure-function-helpers/is-type';
 
-export interface IosbirdContactRawPayload {
-  name : string,
-}
 
 export interface IosbirdRoomRawPayload {
-  topic      : string,
-  memberList : string[],
-  ownerId    : string,
+  topic      : string,     // 群名称
+  memberList?: string[],   // 群成员
+  ownerId?   : string,     // 群主ID
+  roomId     : string,     // 群ID
 }
 
 export class PuppetIosbird extends Puppet {
@@ -82,6 +85,89 @@ export class PuppetIosbird extends Puppet {
   private loopTimer?: NodeJS.Timer
 
   private websocket: IosbirdWebSocket
+
+  private cacheContactRawPayload?     : FlashStoreSync<string, IosBirdWebSocketContact>
+  private cacheRoomRawPayload?        : FlashStoreSync<string, IosBirdWebSocketContact>
+  private cacheRoomMemberRawPayload?  : FlashStoreSync<string, {
+    [contactId: string]: IosBirdWebSocketContact,
+  }>
+
+  private async initCache (
+    userId : string,
+  ): Promise<void> {
+    log.verbose('PuppetPadchatManager', 'initCache(%s)', userId)
+
+    if (   this.cacheContactRawPayload
+        || this.cacheRoomMemberRawPayload
+        || this.cacheRoomRawPayload
+    ) {
+      throw new Error('cache exists')
+    }
+
+    const baseDir = path.join(
+      os.homedir(),
+      path.sep,
+      '.wechaty',
+      'puppet-iosbird-cache',
+      path.sep,
+      userId,
+    )
+
+    const baseDirExist = await fs.pathExists(baseDir)
+
+    if (!baseDirExist) {
+      await fs.mkdirp(baseDir)
+    }
+
+    this.cacheContactRawPayload    = new FlashStoreSync(path.join(baseDir, 'contact-raw-payload'))
+    this.cacheRoomMemberRawPayload = new FlashStoreSync(path.join(baseDir, 'room-member-raw-payload'))
+    this.cacheRoomRawPayload       = new FlashStoreSync(path.join(baseDir, 'room-raw-payload'))
+
+    await Promise.all([
+      this.cacheContactRawPayload.ready(),
+      this.cacheRoomMemberRawPayload.ready(),
+      this.cacheRoomRawPayload.ready(),
+    ])
+
+    const roomMemberTotalNum = [...this.cacheRoomMemberRawPayload.values()].reduce(
+      (accuVal, currVal) => {
+        return accuVal + Object.keys(currVal).length
+      },
+      0,
+    )
+
+    log.verbose('PuppetIosbird', 'initCache() inited %d Contacts, %d RoomMembers, %d Rooms, cachedir="%s"',
+                                      this.cacheContactRawPayload.size,
+                                      roomMemberTotalNum,
+                                      this.cacheRoomRawPayload.size,
+                                      baseDir,
+              )
+  }
+
+  private async releaseCache (): Promise<void> {
+    log.verbose('PuppetIosbird', 'releaseCache()')
+
+    if (   this.cacheContactRawPayload
+        && this.cacheRoomMemberRawPayload
+        && this.cacheRoomRawPayload
+    ) {
+      log.silly('PuppetIosbird', 'releaseCache() closing caches ...')
+
+      await Promise.all([
+        this.cacheContactRawPayload.close(),
+        this.cacheRoomMemberRawPayload.close(),
+        this.cacheRoomRawPayload.close(),
+      ])
+
+      this.cacheContactRawPayload    = undefined
+      this.cacheRoomMemberRawPayload = undefined
+      this.cacheRoomRawPayload       = undefined
+
+      log.silly('PuppetIosbird', 'releaseCache() cache closed.')
+    } else {
+      log.verbose('PuppetIosbird', 'releaseCache() cache not exist.')
+    }
+  }
 
   constructor (
     public options: PuppetOptions = {},
@@ -105,6 +191,7 @@ export class PuppetIosbird extends Puppet {
 
     this.state.on('pending')
     // await some tasks...
+    await this.initCache(BOT_ID)
     this.websocket.on('login', (id) => {
       this.id = id
       this.emit('login', this.id as string)
@@ -139,7 +226,7 @@ export class PuppetIosbird extends Puppet {
     }
 
     this.state.off('pending')
-
+    await this.releaseCache()
     if (this.loopTimer) {
       clearInterval(this.loopTimer)
     }
@@ -233,22 +320,38 @@ export class PuppetIosbird extends Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  public async contactRawPayload (id: string): Promise<IosbirdContactRawPayload> {
+  public async contactRawPayload (id: string): Promise<IosBirdWebSocketContact> {
     log.verbose('PuppetIosbird', 'contactRawPayload(%s)', id)
-    const rawPayload: IosbirdContactRawPayload = {
-      name : 'iosbird name',
+    if (! this.cacheContactRawPayload) {
+      throw new Error('cacheContactRawPayload is not exists')
     }
-    return rawPayload
+    let rawContactPayload = this.cacheContactRawPayload.get(id)
+    if (rawContactPayload) {
+      return rawContactPayload
+    }
+    const contactList = await this.websocket.syncContactAndRoom()
+    contactList.list.map((contact) => {
+      if (contact.c_type === '0') {
+        const contactId = contact.id.split('$')[1]
+        if (contactId === id){
+          rawContactPayload = contact
+        }
+        this.cacheContactRawPayload!.set(contactId, contact)
+      }
+    })
+    if (!rawContactPayload) {
+      throw new Error(`The contact of contactId: ${id} is not exisit`)
+    }
+    return rawContactPayload
   }
 
-  public async contactRawPayloadParser (rawPayload: IosbirdContactRawPayload): Promise<ContactPayload> {
+  public async contactRawPayloadParser (rawPayload: IosBirdWebSocketContact): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
-
     const payload: ContactPayload = {
-      avatar : 'iosbird-avatar-data',
+      avatar : 'to do',
       gender : ContactGender.Unknown,
-      id     : 'id',
-      name   : 'iosbird-name',
+      id     : rawPayload.id,
+      name   : rawPayload.name!,
       type   : ContactType.Unknown,
     }
     return payload
@@ -464,15 +567,31 @@ export class PuppetIosbird extends Puppet {
    */
   public async roomRawPayload (
     id: string,
-  ): Promise<IosbirdRoomRawPayload> {
+  ): Promise<IosBirdWebSocketContact> {
     log.verbose('PuppetIosbird', 'roomRawPayload(%s)', id)
 
-    const rawPayload: IosbirdRoomRawPayload = {
-      memberList: [],
-      ownerId   : 'iosbird_room_owner_id',
-      topic     : 'iosbird topic',
+    if (! this.cacheRoomRawPayload) {
+      throw new Error('cacheRoomRawPayload is not exists')
     }
-    return rawPayload
+    let rawRoomPayload = this.cacheRoomRawPayload.get(id)
+    if (rawRoomPayload) {
+      return rawRoomPayload
+    }
+    const roomList = await this.websocket.syncContactAndRoom()
+    roomList.list.map((room) => {
+      if (room.c_type === '1') {
+        const roomId = room.id.split('$')[1]
+        if (roomId === id) {
+          rawRoomPayload = room
+        }
+        this.cacheRoomRawPayload!.set(roomId, room)
+      }
+    })
+
+    if (rawRoomPayload) {
+      return rawRoomPayload
+    }
+    throw new Error(`The room of id: ${id} is not exists!`)
   }
 
   public async roomRawPayloadParser (
