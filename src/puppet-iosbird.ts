@@ -52,7 +52,7 @@ import {
   VERSION,
   WEBSOCKET_SERVER,
 }                                   from './config'
-import { IosbirdWebSocket } from './iosbird-ws'
+import { IosbirdWebSocket, IosbirdWebSocketMessage, Action, Type, IosbirdMessageType } from './iosbird-ws'
 
 export interface IosbirdContactRawPayload {
   name : string,
@@ -98,6 +98,18 @@ export class PuppetIosbird extends Puppet {
       this.emit('error', error)
     })
     await ws.start()
+    const test: IosbirdWebSocketMessage = {
+      action  : Action.CHAT,
+      id      : "1",
+      type    : Type.WEB,
+      u_id    : 'wxid_j76jk7muhgqz22',   //接收人
+      to_type : Type.IOS,
+      content : 'http://useoss.51talk.com/other/b503aa2f8abcc030a6e2367463a6a86e.mp3',                  //内容
+      cnt_type: 2,                       //消息格式
+      botId   : BOT_ID,
+
+    }
+    ws.sendMessage('wxid_j76jk7muhgqz22', 'This is a test', IosbirdMessageType.TEXT)
 
     // this.emit('scan', 'https://not-exist.com', 0)
 

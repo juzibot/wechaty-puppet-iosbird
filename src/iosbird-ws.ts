@@ -24,11 +24,12 @@ export interface IosbirdWebSocketMessage {
   id       : string,
   botId    : string,   // 机器人ID
   u_id?    : string,   // 接收人
+  to_id?   : string,   // 接收人，@群成员时使用
   type     : Type,
   action   : Action,   // 操作类型了
   content? : string,   // 消息内容
   to_type? : Type,
-  cnt_type?: string,   // 消息格式
+  cnt_type?: number,   // 消息格式
 }
 
 export interface IosbirdIOSMessage {
@@ -45,6 +46,35 @@ export interface IosbirdIOSMessage {
   msgId    : string,
 }
 
+enum ContactType {
+  contact = '0',
+  member  = '1',
+}
+
+export enum IosbirdMessageType {
+  TEXT    = 0,    // 文本
+  PICTURE = 1,    // 图片
+  AUDIO   = 2,    // 音频
+  AT      = 3110  // @ member
+}
+export interface IosBirdWebSocketContact {
+  c_type                   : ContactType,
+  set_to_top               : boolean,
+  id                       : string,
+  c_remark                 : string,
+  nick                     : string,        // 群名或联系人昵称
+  m_uiLastUpdate           : number,
+  allow_owner_approve_value: boolean,
+  type                     : Type,
+  mute_session             : boolean,
+}
+
+export interface IosbirdIOSContactList {
+  id    : string,                      // bot id
+  list  : IosBirdWebSocketContact[],
+  type  : Type,
+  action: Action,
+}
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
 
@@ -97,8 +127,54 @@ export class IosbirdWebSocket extends EventEmitter {
      */
     this.ws.on('message', (message) => {
       const messagePayload = JSON.parse(message as string)
+      if (messagePayload.action === Action.CONTACT_LIST || messagePayload.action === Action.AVATAR_LIST) {
+        return
+      }
       messagePayload.msgId = uuid() as string
       this.emit('message', messagePayload as IosbirdIOSMessage)
+    })
+  }
+
+  public async sendMessage(id: string, message: string, messageType: IosbirdMessageType) {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    const messagePayload: IosbirdWebSocketMessage = {
+      id      : '1',
+      type    : Type.WEB,
+      to_id   : id,
+      u_id    : id,
+      to_type : Type.IOS,
+      content : message,
+      cnt_type: messageType,
+      botId   : this.botId,
+      action  : Action.CHAT,
+    }
+
+    this.ws.send(JSON.stringify(messagePayload))
+  }
+
+
+  public async syncContactAndRoom (): Promise<IosbirdIOSContactList> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id    : '1',
+      type  : Type.WEB,
+      action: Action.GAIN_CONTACT_LIST,
+      botId : this.botId,
+
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<IosbirdIOSContactList>((reslove) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string) as IosbirdIOSContactList
+        if (messagePayload.action === Action.CONTACT_LIST) {
+          reslove(messagePayload)
+        }
+      })
     })
   }
 }
