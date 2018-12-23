@@ -57,7 +57,8 @@ import {
 import {
   IosbirdWebSocket,
   IosbirdMessagePayload,
-  Type
+  Type,
+  IosbirdMessageType,
 }                                   from './iosbird-ws'
 import { messageType } from './pure-function-helpers/message-type'
 import { isRoomId, isContactId } from './pure-function-helpers/is-type';
@@ -338,13 +339,13 @@ export class PuppetIosbird extends Puppet {
     }
 
     /**
-     * 5.1 Validate Room & From ID
+     * 4.1 Validate Room & From ID
      */
     if (!roomId && !fromId) {
       throw Error('empty roomId and empty fromId!')
     }
     /**
-     * 5.1 Validate Room & To ID
+     * 4.1 Validate Room & To ID
      */
     if (!roomId && !toId) {
       throw Error('empty roomId and empty toId!')
@@ -381,7 +382,13 @@ export class PuppetIosbird extends Puppet {
     text     : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, text)
-
+      if (receiver.roomId) {
+        this.websocket.sendMessage(receiver.roomId, text, IosbirdMessageType.TEXT)
+        return
+      }
+    if (receiver.contactId) {
+      this.websocket.sendMessage(receiver.contactId, text, IosbirdMessageType.TEXT)
+    }
 
   }
 
@@ -397,6 +404,7 @@ export class PuppetIosbird extends Puppet {
     contactId : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend("%s", %s)', JSON.stringify(receiver), contactId)
+    log.warn('MessageSendContact Unsupported')
     return
   }
 
@@ -405,6 +413,7 @@ export class PuppetIosbird extends Puppet {
                               JSON.stringify(to),
                               JSON.stringify(urlLinkPayload),
                 )
+    log.warn('MessageSendUrl Unsupported!')
   }
 
   public async messageForward (
@@ -414,7 +423,38 @@ export class PuppetIosbird extends Puppet {
     log.verbose('PuppetIosbird', 'messageForward(%s, %s)',
                               receiver,
                               messageId,
-              )
+    )
+    const rawPayload = this.cacheIosbirdMessagePayload.get(messageId)
+    if (!rawPayload) {
+      throw new Error('There is no message related to messageId: ' + messageId)
+    }
+    const type = rawPayload.cnt_type
+    switch(type) {
+      case IosbirdMessageType.TEXT:
+      case undefined:
+        /**
+         * Send Private Message
+         */
+        if (receiver.roomId) {
+          this.websocket.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.TEXT)
+        } else if (receiver.contactId) {
+          this.websocket.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.TEXT)
+        } else {
+          throw new Error(`receiver can't be null`)
+        }
+        break
+      case IosbirdMessageType.PICTURE:
+        if (receiver.roomId) {
+          this.websocket.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.PICTURE)
+        } else if (receiver.contactId) {
+          this.websocket.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.PICTURE)
+        } else {
+          throw new Error(`receiver can't be null`)
+        }
+        break
+      default:
+        throw new Error(`can't support the message type`)
+    }
   }
 
   /**

@@ -127,7 +127,10 @@ export class IosbirdWebSocket extends EventEmitter {
      */
     this.ws.on('message', (message) => {
       const messagePayload = JSON.parse(message as string)
-      if (messagePayload.action === Action.CONTACT_LIST || messagePayload.action === Action.AVATAR_LIST) {
+      if ( messagePayload.action === Action.CONTACT_LIST ||
+           messagePayload.action === Action.AVATAR_LIST ||
+           messagePayload.status
+          ) {
         return
       }
       messagePayload.msgId = uuid() as string
