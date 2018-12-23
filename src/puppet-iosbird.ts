@@ -22,6 +22,8 @@ import {
   FileBox,
 }             from 'file-box'
 
+import LRU      from 'lru-cache'
+
 import {
   ContactGender,
   ContactPayload,
@@ -42,7 +44,7 @@ import {
   RoomPayload,
 
   UrlLinkPayload,
-}                           from '../wechaty-puppet/src'
+}                                   from '../wechaty-puppet/src'
 
 import {
   BOT_ID,
@@ -52,17 +54,16 @@ import {
   VERSION,
   WEBSOCKET_SERVER,
 }                                   from './config'
-import { IosbirdWebSocket, IosbirdWebSocketMessage, Action, Type, IosbirdMessageType } from './iosbird-ws'
+import {
+  IosbirdWebSocket,
+  IosbirdMessagePayload,
+  Type
+}                                   from './iosbird-ws'
+import { messageType } from './pure-function-helpers/message-type'
+import { isRoomId, isContactId } from './pure-function-helpers/is-type';
 
 export interface IosbirdContactRawPayload {
   name : string,
-}
-
-export interface IosbirdMessageRawPayload {
-  id   : string,
-  from : string,
-  to   : string,
-  text : string
 }
 
 export interface IosbirdRoomRawPayload {
@@ -75,12 +76,24 @@ export class PuppetIosbird extends Puppet {
 
   public static readonly VERSION = VERSION
 
+  private readonly cacheIosbirdMessagePayload: LRU.Cache<string, IosbirdMessagePayload>
+
   private loopTimer?: NodeJS.Timer
 
   constructor (
     public options: PuppetOptions = {},
   ) {
     super(options)
+    const lruOptions: LRU.Options = {
+      max: 1000,
+      // length: function (n) { return n * 2},
+      dispose (key: string, val: any) {
+        log.silly('PuppetIosbird', 'constructor() lruOptions.dispose(%s, %s)', key, JSON.stringify(val))
+      },
+      maxAge: 1000 * 60 * 60,
+    }
+
+    this.cacheIosbirdMessagePayload = new LRU<string, IosbirdMessagePayload>(lruOptions)
   }
 
   public async start (): Promise<void> {
@@ -97,36 +110,20 @@ export class PuppetIosbird extends Puppet {
     ws.on('error', (error: Error) => {
       this.emit('error', error)
     })
-    await ws.start()
-    const test: IosbirdWebSocketMessage = {
-      action  : Action.CHAT,
-      id      : "1",
-      type    : Type.WEB,
-      u_id    : 'wxid_j76jk7muhgqz22',   //接收人
-      to_type : Type.IOS,
-      content : 'http://useoss.51talk.com/other/b503aa2f8abcc030a6e2367463a6a86e.mp3',                  //内容
-      cnt_type: 2,                       //消息格式
-      botId   : BOT_ID,
 
-    }
-    ws.sendMessage('wxid_j76jk7muhgqz22', 'This is a test', IosbirdMessageType.TEXT)
+    /**
+     * Save meaage for future usage
+     */
+    ws.on('message', (message: IosbirdMessagePayload) => {
+      this.cacheIosbirdMessagePayload.set(message.msgId, message)
 
-    // this.emit('scan', 'https://not-exist.com', 0)
-
-    const MOCK_MSG_ID = 'iosbirdid'
-    this.cacheMessagePayload.set(MOCK_MSG_ID, {
-      fromId    : 'xxx',
-      id        : MOCK_MSG_ID,
-      text      : 'iosbird text',
-      timestamp : Date.now(),
-      toId      : 'xxx',
-      type      : MessageType.Text,
+      // TODO:
+      /**
+       * Check for Different Message Type
+       */
+      this.emit('message', message.msgId)
     })
-
-    this.loopTimer = setInterval(() => {
-      log.verbose('PuppetIosbird', `start() setInterval() pretending received a new message: ${MOCK_MSG_ID}`)
-      this.emit('message', MOCK_MSG_ID)
-    }, 3000)
+    await ws.start()
   }
 
   public async stop (): Promise<void> {
@@ -275,26 +272,104 @@ export class PuppetIosbird extends Puppet {
     }
   }
 
-  public async messageRawPayload (id: string): Promise<IosbirdMessageRawPayload> {
+  public async messageRawPayload (id: string): Promise<IosbirdMessagePayload> {
     log.verbose('PuppetIosbird', 'messageRawPayload(%s)', id)
-    const rawPayload: IosbirdMessageRawPayload = {
-      from : 'from_id',
-      id   : 'id',
-      text : 'iosbird message text',
-      to   : 'to_id',
+    const rawPayload = this.cacheIosbirdMessagePayload.get(id)
+    if (!rawPayload) {
+      throw new Error('no rawPayload')
     }
     return rawPayload
   }
 
-  public async messageRawPayloadParser (rawPayload: IosbirdMessageRawPayload): Promise<MessagePayload> {
+  public async messageRawPayloadParser (rawPayload: IosbirdMessagePayload): Promise<MessagePayload> {
     log.verbose('PuppetIosbird', 'messagePayload(%s)', rawPayload)
-    const payload: MessagePayload = {
-      fromId    : 'xxx',
-      id        : rawPayload.id,
-      text      : 'iosbird message text',
-      timestamp : Date.now(),
-      toId      : this.selfId(),
-      type      : MessageType.Text,
+
+    const type = messageType(rawPayload.cnt_type)
+    let payloadBase = {
+      id       : rawPayload.msgId,
+      timestamp: Date.now(),
+      type     : type,
+      text     : rawPayload.content,
+    }
+
+    let fromId: undefined | string
+    let roomId: undefined | string
+    let toId:   undefined | string
+    let mentionIdList: undefined | string[]
+
+    /**
+     * 1. Set Room Id
+     */
+    if (isRoomId(rawPayload.u_id)) {
+      roomId = rawPayload.u_id
+    } else {
+      roomId = undefined
+    }
+
+    /**
+     * 2. Set To Contact Id
+     */
+    if (isContactId(rawPayload.u_id)) {
+      if (rawPayload.s_type === Type.WEB) {
+        toId   = rawPayload.u_id
+      } else {
+        toId = BOT_ID
+      }
+    } else {
+      toId   = undefined
+    }
+
+    /**
+     * 3. Set From Contact Id
+     */
+    if (isContactId(rawPayload.u_id)) {
+      if (rawPayload.s_type === Type.WEB) {
+        fromId   = BOT_ID
+      } else {
+        fromId = rawPayload.u_id
+      }
+    } else {
+      fromId = rawPayload.mem_id.split('$')[1]
+      if (isRoomId(fromId)) {
+        fromId = BOT_ID
+      }
+    }
+
+    /**
+     * 5.1 Validate Room & From ID
+     */
+    if (!roomId && !fromId) {
+      throw Error('empty roomId and empty fromId!')
+    }
+    /**
+     * 5.1 Validate Room & To ID
+     */
+    if (!roomId && !toId) {
+      throw Error('empty roomId and empty toId!')
+    }
+
+    let payload: MessagePayload
+
+    // Two branch is the same code.
+    // Only for making TypeScript happy
+    if (fromId && toId) {
+      payload = {
+        ...payloadBase,
+        fromId,
+        mentionIdList,
+        roomId,
+        toId,
+      }
+    } else if (roomId) {
+      payload = {
+        ...payloadBase,
+        fromId,
+        mentionIdList,
+        roomId,
+        toId,
+      }
+    } else {
+      throw new Error('neither toId nor roomId')
     }
     return payload
   }

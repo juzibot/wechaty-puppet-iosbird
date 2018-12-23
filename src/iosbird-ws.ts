@@ -29,15 +29,15 @@ export interface IosbirdWebSocketMessage {
   action   : Action,   // 操作类型了
   content? : string,   // 消息内容
   to_type? : Type,
-  cnt_type?: number,   // 消息格式
+  cnt_type?: IosbirdMessageType,   // 消息格式
 }
 
-export interface IosbirdIOSMessage {
+export interface IosbirdMessagePayload {
   action   : string,
   to_type  : Type,
   s_type   : Type,
   id       : string,
-  cnt_type?: string,
+  cnt_type?: IosbirdMessageType,
   content  : string,
   mem_id   : string,
   u_id     : string,
@@ -131,7 +131,7 @@ export class IosbirdWebSocket extends EventEmitter {
         return
       }
       messagePayload.msgId = uuid() as string
-      this.emit('message', messagePayload as IosbirdIOSMessage)
+      this.emit('message', messagePayload as IosbirdMessagePayload)
     })
   }
 
