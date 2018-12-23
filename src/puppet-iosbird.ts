@@ -80,6 +80,8 @@ export class PuppetIosbird extends Puppet {
 
   private loopTimer?: NodeJS.Timer
 
+  private websocket: IosbirdWebSocket
+
   constructor (
     public options: PuppetOptions = {},
   ) {
@@ -94,6 +96,7 @@ export class PuppetIosbird extends Puppet {
     }
 
     this.cacheIosbirdMessagePayload = new LRU<string, IosbirdMessagePayload>(lruOptions)
+     this.websocket = new IosbirdWebSocket(WEBSOCKET_SERVER, BOT_ID)
   }
 
   public async start (): Promise<void> {
@@ -101,20 +104,19 @@ export class PuppetIosbird extends Puppet {
 
     this.state.on('pending')
     // await some tasks...
-    const ws = new IosbirdWebSocket(WEBSOCKET_SERVER, BOT_ID)
-    ws.on('login', (id) => {
+    this.websocket.on('login', (id) => {
       this.id = id
       this.emit('login', this.id as string)
       this.state.on(true)
     })
-    ws.on('error', (error: Error) => {
+    this.websocket.on('error', (error: Error) => {
       this.emit('error', error)
     })
 
     /**
      * Save meaage for future usage
      */
-    ws.on('message', (message: IosbirdMessagePayload) => {
+    this.websocket.on('message', (message: IosbirdMessagePayload) => {
       this.cacheIosbirdMessagePayload.set(message.msgId, message)
 
       // TODO:
@@ -123,7 +125,7 @@ export class PuppetIosbird extends Puppet {
        */
       this.emit('message', message.msgId)
     })
-    await ws.start()
+    await this.websocket.start()
   }
 
   public async stop (): Promise<void> {
@@ -379,6 +381,8 @@ export class PuppetIosbird extends Puppet {
     text     : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, text)
+
+
   }
 
   public async messageSendFile (
