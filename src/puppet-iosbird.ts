@@ -64,6 +64,7 @@ import {
   Type,
   IosbirdMessageType,
   IosBirdWebSocketContact,
+  IosbirdRoomMemberPayload,
 }                                   from './iosbird-ws'
 import { messageType } from './pure-function-helpers/message-type'
 import { isRoomId, isContactId } from './pure-function-helpers/is-type';
@@ -89,7 +90,7 @@ export class PuppetIosbird extends Puppet {
   private cacheContactRawPayload?     : FlashStoreSync<string, IosBirdWebSocketContact>
   private cacheRoomRawPayload?        : FlashStoreSync<string, IosBirdWebSocketContact>
   private cacheRoomMemberRawPayload?  : FlashStoreSync<string, {
-    [contactId: string]: IosBirdWebSocketContact,
+    [contactId: string]: IosbirdRoomMemberPayload,
   }>
 
   private async initCache (
@@ -291,6 +292,7 @@ export class PuppetIosbird extends Puppet {
     return []
   }
 
+  // TODO:
   public async contactQrcode (contactId: string): Promise<string> {
     if (contactId !== this.selfId()) {
       throw new Error('can not set avatar for others')
@@ -300,6 +302,7 @@ export class PuppetIosbird extends Puppet {
     // return await this.bridge.WXqr
   }
 
+  // TODO:
   public async contactAvatar (contactId: string)                : Promise<FileBox>
   public async contactAvatar (contactId: string, file: FileBox) : Promise<void>
 
@@ -333,6 +336,7 @@ export class PuppetIosbird extends Puppet {
     contactList.list.map((contact) => {
       if (contact.c_type === '0') {
         const contactId = contact.id.split('$')[1]
+        contact.id        = contactId
         if (contactId === id){
           rawContactPayload = contact
         }
@@ -362,6 +366,7 @@ export class PuppetIosbird extends Puppet {
    * Message
    *
    */
+  // TODO:
   public async messageFile (id: string): Promise<FileBox> {
     return FileBox.fromBase64(
       'cRH9qeL3XyVnaXJkppBuH20tf5JlcG9uFX1lL2IvdHRRRS9kMMQxOPLKNYIzQQ==',
@@ -369,6 +374,7 @@ export class PuppetIosbird extends Puppet {
     )
   }
 
+  // TODO:
   public async messageUrl (messageId: string)  : Promise<UrlLinkPayload> {
     log.verbose('PuppetIosbird', 'messageUrl(%s)')
 
@@ -495,6 +501,7 @@ export class PuppetIosbird extends Puppet {
 
   }
 
+  // TODO:
   public async messageSendFile (
     receiver : Receiver,
     file     : FileBox,
@@ -502,6 +509,7 @@ export class PuppetIosbird extends Puppet {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, file)
   }
 
+  // TODO:
   public async messageSendContact (
     receiver  : Receiver,
     contactId : string,
@@ -511,6 +519,7 @@ export class PuppetIosbird extends Puppet {
     return
   }
 
+  // TODO:
   public async messageSendUrl (to: Receiver, urlLinkPayload: UrlLinkPayload) : Promise<void> {
     log.verbose('PuppetIosbird', 'messageSendUrl("%s", %s)',
                               JSON.stringify(to),
@@ -584,10 +593,10 @@ export class PuppetIosbird extends Puppet {
         if (roomId === id) {
           rawRoomPayload = room
         }
+        room.id = roomId
         this.cacheRoomRawPayload!.set(roomId, room)
       }
     })
-
     if (rawRoomPayload) {
       return rawRoomPayload
     }
@@ -595,14 +604,14 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async roomRawPayloadParser (
-    rawPayload: IosbirdRoomRawPayload,
+    rawPayload: IosBirdWebSocketContact,
   ): Promise<RoomPayload> {
     log.verbose('PuppetIosbird', 'roomRawPayloadParser(%s)', rawPayload)
-
+    const memberIdList = await this.roomMemberList(rawPayload.id)
     const payload: RoomPayload = {
-      id           : 'id',
-      memberIdList : [],
-      topic        : 'iosbird topic',
+      id           : rawPayload.id,
+      memberIdList : memberIdList,
+      topic        : rawPayload.nick,
     }
 
     return payload
@@ -610,10 +619,15 @@ export class PuppetIosbird extends Puppet {
 
   public async roomList (): Promise<string[]> {
     log.verbose('PuppetIosbird', 'roomList()')
-
-    return []
+    if (!this.cacheRoomRawPayload) {
+      throw new Error('cache not inited' )
+    }
+    const roomIdList = [...this.cacheRoomRawPayload.keys()]
+    log.verbose('PuppetIosbird', 'roomList()=%d', roomIdList.length)
+    return roomIdList
   }
 
+  // TODO:
   public async roomDel (
     roomId    : string,
     contactId : string,
@@ -633,6 +647,7 @@ export class PuppetIosbird extends Puppet {
     return qrCodeForChatie()
   }
 
+  // TODO:
   public async roomAdd (
     roomId    : string,
     contactId : string,
@@ -650,11 +665,14 @@ export class PuppetIosbird extends Puppet {
     log.verbose('PuppetIosbird', 'roomTopic(%s, %s)', roomId, topic)
 
     if (typeof topic === 'undefined') {
-      return 'iosbird room topic'
+      const payload = await this.roomPayload(roomId)
+      return payload.topic
     }
+    // TODO: Set room topic
     return
   }
 
+  // TODO:
   public async roomCreate (
     contactIdList : string[],
     topic         : string,
@@ -664,34 +682,54 @@ export class PuppetIosbird extends Puppet {
     return 'iosbird_room_id'
   }
 
+  // TODO:
   public async roomQuit (roomId: string): Promise<void> {
     log.verbose('PuppetIosbird', 'roomQuit(%s)', roomId)
   }
 
+  // TODO:
   public async roomQrcode (roomId: string): Promise<string> {
     return roomId + ' iosbird qrcode'
   }
 
   public async roomMemberList (roomId: string) : Promise<string[]> {
     log.verbose('PuppetIosbird', 'roommemberList(%s)', roomId)
-    return []
+    if (!this.cacheRoomMemberRawPayload) {
+      throw new Error('cacheRoomMemberRawPayload is not init')
+    }
+    if (this.cacheRoomMemberRawPayload.has(roomId)) {
+      const memberListDic = this.cacheRoomMemberRawPayload.get(roomId)
+      return Object.keys(memberListDic!)
+    }
+    const roomMemberListDic = await this.websocket.syncRoomMembers(roomId)
+    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
+    return Object.keys(roomMemberListDic)
   }
 
-  public async roomMemberRawPayload (roomId: string, contactId: string): Promise<any>  {
+  public async roomMemberRawPayload (roomId: string, contactId: string): Promise<IosbirdRoomMemberPayload>  {
     log.verbose('PuppetIosbird', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
-    return {}
+    if (!this.cacheRoomMemberRawPayload) {
+      throw new Error('cacheRoomMemberRawPayload is not init')
+    }
+    if (this.cacheRoomMemberRawPayload.has(roomId)) {
+      return this.cacheRoomMemberRawPayload.get(roomId)![contactId]
+    }
+    const roomMemberListDic = await this.websocket.syncRoomMembers(roomId)
+    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
+    return roomMemberListDic[contactId]
   }
 
-  public async roomMemberRawPayloadParser (rawPayload: any): Promise<RoomMemberPayload>  {
+  public async roomMemberRawPayloadParser (rawPayload: IosbirdRoomMemberPayload): Promise<RoomMemberPayload>  {
     log.verbose('PuppetIosbird', 'roomMemberRawPayloadParser(%s)', rawPayload)
     return {
-      avatar    : 'iosbird-avatar-data',
-      id        : 'xx',
-      name      : 'iosbird-name',
-      roomAlias : 'yy',
+      avatar   : rawPayload.wechat_img,
+      id       : rawPayload.wechat_id,
+      name     : rawPayload.wechat_nick,
+      roomAlias: rawPayload.wechat_real_nick,
     }
   }
 
+  // TODO:
   public async roomAnnounce (roomId: string)                : Promise<string>
   public async roomAnnounce (roomId: string, text: string)  : Promise<void>
 
@@ -699,6 +737,7 @@ export class PuppetIosbird extends Puppet {
     if (text) {
       return
     }
+
     return 'iosbird announcement for ' + roomId
   }
 

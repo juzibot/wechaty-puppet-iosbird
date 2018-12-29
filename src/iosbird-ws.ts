@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import WebSocket        from 'ws'
 import {
-  log,
+  log, BOT_ID,
 }                       from './config'
 
 const uuid = require('uuidv4')
@@ -12,7 +12,8 @@ export enum Action {
   ANNOUNCEMENT      = 'announcement',     // 发送群公告
   GAIN_CONTACT_LIST = 'gain_user_list',   // 请求联系人信息列表
   CONTACT_LIST      = 'user_list',        // 收到联系人信息列表
-  AVATAR_LIST       = 'avatar_list',      // 获取联系人头像
+  AVATAR_LIST       = 'avatar_list',      // 群头像
+  ROOM_MEMBER       = 'group_user_list',  // 获取群成员信息列表
 }
 
 export enum Type {
@@ -22,14 +23,15 @@ export enum Type {
 
 export interface IosbirdWebSocketMessage {
   id       : string,
-  botId    : string,   // 机器人ID
-  u_id?    : string,   // 接收人
-  to_id?   : string,   // 接收人，@群成员时使用
+  botId    : string,               // 机器人ID
+  u_id?    : string,               // 接收人
+  to_id?   : string,               // 接收人，@群成员时使用
   type     : Type,
-  action   : Action,   // 操作类型了
-  content? : string,   // 消息内容
+  action   : Action,               // 操作类型了
+  content? : string,               // 消息内容
   to_type? : Type,
   cnt_type?: IosbirdMessageType,   // 消息格式
+  call_id? : string,
 }
 
 export interface IosbirdMessagePayload {
@@ -75,6 +77,19 @@ export interface IosbirdIOSContactList {
   list  : IosBirdWebSocketContact[],
   type  : Type,
   action: Action,
+}
+
+export interface IosbirdRoomMemberPayload {
+  // "is_myfriend"     : 1,
+  // "wechat_id"       : "wxid_tdax1huk5hgs12$wxid_3xl8j2suau8b22",
+  // "wechat_img"      : "http://wx.qlogo.cn/mmhead/ver_1/BCGUXia8vbzQ4xdWPpvjwuDEhIoP94QazpskxCRgj5jfULtY0qXGQGETzMEibhPYLXmHwbF9ZfA1GaOLYvVSTx8A/132",
+  // "wechat_real_nick": "桔小秘",
+  // "wechat_nick"     : "桔小秘"
+  'is_myfriend'     : number,   // 与机器人是否为好友(1: 是， 0: 否)
+  'wechat_id'       : string,   // 机器人contactId和成员的contactId
+  'wechat_img'      : string,   // 成员的头像
+  'wechat_real_nick': string,   // 群昵称
+  'wechat_nick'     : string,   // 微信昵称
 }
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
@@ -172,11 +187,39 @@ export class IosbirdWebSocket extends EventEmitter {
 
     }
     this.ws.send(JSON.stringify(options))
-    return new Promise<IosbirdIOSContactList>((reslove) => {
+    return new Promise<IosbirdIOSContactList>((resolve) => {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string) as IosbirdIOSContactList
         if (messagePayload.action === Action.CONTACT_LIST) {
-          reslove(messagePayload)
+          resolve(messagePayload)
+        }
+      })
+    })
+  }
+
+  public async syncRoomMembers (roomId: string): Promise<{[contactId: string]: IosbirdRoomMemberPayload}> {
+    if (!this.ws) {
+      throw new Error('syncRoomMember(): WS is not connected')
+    }
+    const options = {
+      action: Action.ROOM_MEMBER,
+      u_id  : roomId,
+      botId : this.botId,
+      type  : Type.WEB,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<{[contactId: string]: IosbirdRoomMemberPayload}>((resolve) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_MEMBER) {
+          const memberList = messagePayload.list
+          const roomMemberDic: {[contactId: string]: IosbirdRoomMemberPayload} = {}
+          memberList.map((member: IosbirdRoomMemberPayload) => {
+            const contactId = member.wechat_id.split('$')[1]
+            member.wechat_id = contactId
+            roomMemberDic[contactId] = member
+          })
+          resolve(roomMemberDic)
         }
       })
     })
