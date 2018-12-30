@@ -18,15 +18,15 @@
  */
 import path  from 'path'
 import os from 'os'
-import fs from 'fs-extra'
+import fs                           from 'fs-extra'
 
-import {FlashStoreSync} from 'flash-store'
+import {FlashStoreSync}             from 'flash-store'
 
 import {
   FileBox,
-}             from 'file-box'
+}                                   from 'file-box'
 
-import LRU      from 'lru-cache'
+import LRU                          from 'lru-cache'
 
 import {
   ContactGender,
@@ -36,7 +36,6 @@ import {
   FriendshipPayload,
 
   MessagePayload,
-  MessageType,
 
   Puppet,
   PuppetOptions,
@@ -60,14 +59,19 @@ import {
 }                                   from './config'
 import {
   IosbirdWebSocket,
-  IosbirdMessagePayload,
   Type,
-  IosbirdMessageType,
-  IosBirdWebSocketContact,
-  IosbirdRoomMemberPayload,
 }                                   from './iosbird-ws'
-import { messageType } from './pure-function-helpers/message-type'
-import { isRoomId, isContactId } from './pure-function-helpers/is-type';
+import { messageType }              from './pure-function-helpers/message-type'
+import {
+  isRoomId,
+  isContactId
+}                                   from './pure-function-helpers/is-type'
+import {
+  IosbirdMessagePayload,
+  IosbirdContactPayload,
+  IosbirdRoomMemberPayload,
+  IosbirdMessageType
+}                                   from './iosbird-schema'
 
 
 export interface IosbirdRoomRawPayload {
@@ -87,8 +91,8 @@ export class PuppetIosbird extends Puppet {
 
   private websocket: IosbirdWebSocket
 
-  private cacheContactRawPayload?     : FlashStoreSync<string, IosBirdWebSocketContact>
-  private cacheRoomRawPayload?        : FlashStoreSync<string, IosBirdWebSocketContact>
+  private cacheContactRawPayload?     : FlashStoreSync<string, IosbirdContactPayload>
+  private cacheRoomRawPayload?        : FlashStoreSync<string, IosbirdContactPayload>
   private cacheRoomMemberRawPayload?  : FlashStoreSync<string, {
     [contactId: string]: IosbirdRoomMemberPayload,
   }>
@@ -323,7 +327,7 @@ export class PuppetIosbird extends Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  public async contactRawPayload (id: string): Promise<IosBirdWebSocketContact> {
+  public async contactRawPayload (id: string): Promise<IosbirdContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayload(%s)', id)
     if (! this.cacheContactRawPayload) {
       throw new Error('cacheContactRawPayload is not exists')
@@ -349,7 +353,7 @@ export class PuppetIosbird extends Puppet {
     return rawContactPayload
   }
 
-  public async contactRawPayloadParser (rawPayload: IosBirdWebSocketContact): Promise<ContactPayload> {
+  public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
     const payload: ContactPayload = {
       avatar : 'to do',
@@ -576,7 +580,7 @@ export class PuppetIosbird extends Puppet {
    */
   public async roomRawPayload (
     id: string,
-  ): Promise<IosBirdWebSocketContact> {
+  ): Promise<IosbirdContactPayload> {
     log.verbose('PuppetIosbird', 'roomRawPayload(%s)', id)
 
     if (! this.cacheRoomRawPayload) {
@@ -604,7 +608,7 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async roomRawPayloadParser (
-    rawPayload: IosBirdWebSocketContact,
+    rawPayload: IosbirdContactPayload,
   ): Promise<RoomPayload> {
     log.verbose('PuppetIosbird', 'roomRawPayloadParser(%s)', rawPayload)
     const memberIdList = await this.roomMemberList(rawPayload.id)

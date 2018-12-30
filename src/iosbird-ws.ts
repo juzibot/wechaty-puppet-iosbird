@@ -1,8 +1,14 @@
-import { EventEmitter } from 'events'
-import WebSocket        from 'ws'
+import { EventEmitter }       from 'events'
+import WebSocket              from 'ws'
 import {
-  log, BOT_ID,
-}                       from './config'
+  log,
+}                             from './config'
+import {
+  IosbirdMessageType,
+  IosbirdContactPayload,
+  IosbirdMessagePayload,
+  IosbirdRoomMemberPayload
+}                             from './iosbird-schema';
 
 const uuid = require('uuidv4')
 
@@ -21,7 +27,7 @@ export enum Type {
   IOS = 'ios',
 }
 
-export interface IosbirdWebSocketMessage {
+export interface MessagePayloadOfSending {
   id       : string,
   botId    : string,               // 机器人ID
   u_id?    : string,               // 接收人
@@ -34,63 +40,21 @@ export interface IosbirdWebSocketMessage {
   call_id? : string,
 }
 
-export interface IosbirdMessagePayload {
-  action   : string,
-  to_type  : Type,
-  s_type   : Type,
-  id       : string,
-  cnt_type?: IosbirdMessageType,
-  content  : string,
-  mem_id   : string,
-  u_id     : string,
-  type     : Type,
-  name     : string,
-  msgId    : string,
+export enum ContactType {
+  contact = '0',      // 好友
+  member  = '1',      // 群成员
 }
 
-enum ContactType {
-  contact = '0',
-  member  = '1',
-}
 
-export enum IosbirdMessageType {
-  TEXT    = 0,    // 文本
-  PICTURE = 1,    // 图片
-  AUDIO   = 2,    // 音频
-  AT      = 3110  // @ member
-}
-export interface IosBirdWebSocketContact {
-  c_type                   : ContactType,
-  set_to_top               : boolean,
-  id                       : string,
-  c_remark                 : string,
-  nick                     : string,        // 群名或联系人昵称
-  m_uiLastUpdate           : number,
-  allow_owner_approve_value: boolean,
-  type                     : Type,
-  mute_session             : boolean,
-  name?                    : string,      // 微信名称
-}
+
 
 export interface IosbirdIOSContactList {
   id    : string,                      // bot id
-  list  : IosBirdWebSocketContact[],
+  list  : IosbirdContactPayload[],
   type  : Type,
   action: Action,
 }
 
-export interface IosbirdRoomMemberPayload {
-  // "is_myfriend"     : 1,
-  // "wechat_id"       : "wxid_tdax1huk5hgs12$wxid_3xl8j2suau8b22",
-  // "wechat_img"      : "http://wx.qlogo.cn/mmhead/ver_1/BCGUXia8vbzQ4xdWPpvjwuDEhIoP94QazpskxCRgj5jfULtY0qXGQGETzMEibhPYLXmHwbF9ZfA1GaOLYvVSTx8A/132",
-  // "wechat_real_nick": "桔小秘",
-  // "wechat_nick"     : "桔小秘"
-  'is_myfriend'     : number,   // 与机器人是否为好友(1: 是， 0: 否)
-  'wechat_id'       : string,   // 机器人contactId和成员的contactId
-  'wechat_img'      : string,   // 成员的头像
-  'wechat_real_nick': string,   // 群昵称
-  'wechat_nick'     : string,   // 微信昵称
-}
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
 
@@ -117,7 +81,7 @@ export class IosbirdWebSocket extends EventEmitter {
     await new Promise((resolve, reject) => {
       this.ws!.once('open', () => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(open)')
-        const msg: IosbirdWebSocketMessage = {
+        const msg: MessagePayloadOfSending = {
           action: Action.ENTER,
           botId: this.botId,
           id: '1',
@@ -158,7 +122,7 @@ export class IosbirdWebSocket extends EventEmitter {
     if (!this.ws) {
       throw new Error('WS is not connected')
     }
-    const messagePayload: IosbirdWebSocketMessage = {
+    const messagePayload: MessagePayloadOfSending = {
       id      : '1',
       type    : Type.WEB,
       to_id   : id,
