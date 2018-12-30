@@ -3,7 +3,7 @@ import { FileBox }  from 'file-box'
 import qrImage      from 'qr-image'
 
 export const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
-export const WEBSOCKET_SERVER               = '10.128.209.35:7888'
+export const WEBSOCKET_SERVER               = '116.196.92.94:7888'
 export const BOT_ID                         = 'wxid_tdax1huk5hgs12'
 
 export function qrCodeForChatie (): FileBox {
