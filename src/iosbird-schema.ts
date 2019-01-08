@@ -4,7 +4,8 @@ export enum IosbirdMessageType {
   TEXT       = 0,        // 文本
   PICTURE    = 1,        // 图片
   AUDIO      = 2,        // 音频
-  Files      = 6000,     // 文件
+  LINK       = 495,      // 链接
+  FILE       = 6000,     // 文件
   VEDIO      = 6001,     // 视频
   RED_PACKET = 492001,   // 红包
   AT         = 3110,     // @ member
@@ -82,7 +83,7 @@ export interface IosbirdMessagePayload {
    *  "name": "林贻民"
    * }
    *
-   * Files
+   * FILE
    *
    * {
    *   "action": "chat",
@@ -96,18 +97,38 @@ export interface IosbirdMessagePayload {
    *   "type": "ios",
    *   "name": "林贻民"
    * }
+   *
+   * LINK
+   * {
+   *   "id": "wxid_tdax1huk5hgs12",
+   *   "m_nsTitle": "Writing cross-platform Node.js | George Ornbo",
+   *   "mem_id": "",
+   *   "s_type": "ios",
+   *   "type": "ios",
+   *   "action": "chat",
+   *   "cnt_type": 495,
+   *   "m_nsDesc": "https://shapeshed.com/writing-cross-platform-node/",
+   *   "m_nsThumbUrl": "",
+   *   "to_type": "web",
+   *   "u_id": "wxid_j76jk7muhgqz22",
+   *   "name": "林贻民",
+   *   "content": "{\"urlStr\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"title\":\"Writing cross-platform Node.js | George Ornbo\",\"thumbUrl\":\"\",\"desc\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"localMsgId\":\"\"}"
+   * }
    */
-  action   : string,               // 操作类型
-  to_type  : Type,
-  s_type   : Type,
-  id       : string,               // Bot Id
-  cnt_type?: IosbirdMessageType,   // Message Type
-  content  : string,               // Message Content
-  mem_id   : string,               // Who is send the message in the room
-  u_id     : string,               // Contact Id or Room Id
-  type     : Type,
-  name     : string,
-  msgId    : string,
+  action       : string,               // 操作类型
+  to_type      : Type,
+  s_type       : Type,
+  id           : string,               // Bot Id
+  cnt_type?    : IosbirdMessageType,   // Message Type
+  content      : string,               // Message Content
+  mem_id       : string,               // Who is send the message in the room
+  u_id         : string,               // Contact Id or Room Id
+  type         : Type,
+  name         : string,
+  msgId        : string,
+  m_nsTitle?   : string,               // Link title
+  m_nsDesc?    : string,               // Link Description
+  m_nsThumbUrl?: string,               // Link url
 }
 
 

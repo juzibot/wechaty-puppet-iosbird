@@ -1,4 +1,4 @@
-import { IosbirdMessageType } from '../iosbird-ws'
+import { IosbirdMessageType } from '../iosbird-schema'
 
 import { MessageType } from '../../wechaty-puppet/src'
 
