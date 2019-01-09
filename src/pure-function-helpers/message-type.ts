@@ -19,6 +19,12 @@ export function messageType (
     case IosbirdMessageType.AUDIO:
       type = MessageType.Audio
       break
+    case IosbirdMessageType.LINK:
+      type = MessageType.Url
+      break
+    case IosbirdMessageType.FILE:
+      type = MessageType.Attachment
+      break
     default:
       type = MessageType.Unknown
       break
