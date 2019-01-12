@@ -54,7 +54,6 @@ import {
   WEBSOCKET_SERVER,
 }                                   from './config'
 import {
-  IosbirdWebSocket,
   Type,
 }                                   from './iosbird-ws'
 import { messageType }              from './pure-function-helpers/message-type'
@@ -200,15 +199,21 @@ export class PuppetIosbird extends Puppet {
     log.verbose('PuppetIosbird', 'contactAlias(%s, %s)', contactId, alias)
 
     if (typeof alias === 'undefined') {
-      return 'iosbird alias'
+      const payload = await this.contactPayload(contactId)
+      return payload.alias || ''
     }
     return
   }
 
   public async contactList (): Promise<string[]> {
     log.verbose('PuppetIosbird', 'contactList()')
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
 
-    return []
+    const contactIdList = this.iosbirdManager.getContactIdList()
+
+    return contactIdList
   }
 
   // TODO:
@@ -230,6 +235,7 @@ export class PuppetIosbird extends Puppet {
 
     /**
      * 1. set
+     * TODO:
      */
     if (file) {
       return
@@ -238,8 +244,17 @@ export class PuppetIosbird extends Puppet {
     /**
      * 2. get
      */
-    const WECHATY_ICON_PNG = path.resolve('../../docs/images/wechaty-icon.png')
-    return FileBox.fromFile(WECHATY_ICON_PNG)
+    const payload = await this.contactPayload(contactId)
+
+    if (!payload.avatar) {
+      throw new Error('no avatar')
+    }
+
+    const fileBox = FileBox.fromUrl(
+      payload.avatar,
+      `wechaty-contact-avatar-${payload.name}.jpg`,
+    )
+    return fileBox
   }
 
   public async contactRawPayload (id: string): Promise<IosbirdContactPayload> {
@@ -254,7 +269,7 @@ export class PuppetIosbird extends Puppet {
   public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
     const payload: ContactPayload = {
-      avatar: 'to do',
+      avatar: 'http://wx.qlogo.cn/mmhead/ver_1/iaiaSEnR0icJwcQVlic1COUdITdA07JgUibMGQrYT6R3JvolLEdtZKtqwZ75rtIlWcrL7ruNdQmN9makdqLHyXIQaf4uuIuEgsKF6LVDpqibpWXGc/132',
       gender: ContactGender.Unknown,
       id    : rawPayload.id,
       name  : rawPayload.name!,

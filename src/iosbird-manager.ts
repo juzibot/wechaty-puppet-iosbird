@@ -180,6 +180,16 @@ export class IosbirdManager extends IosbirdWebSocket {
     return Object.keys(roomMemberListDict)
   }
 
+  public async getContactIdList (): Promise<string[]> {
+    log.verbose('IosbirdManager', 'getContactIdList()')
+    if (!this.cacheContactRawPayload) {
+      throw new Error('cache not inited' )
+    }
+    const contactIdList = [...this.cacheContactRawPayload.keys()]
+    log.silly('PuppetPadchatManager', 'getContactIdList() = %d', contactIdList.length)
+    return contactIdList
+  }
+
   public async roomMemberRawPayload(roomId: string): Promise<{ [contactId: string]: IosbirdRoomMemberPayload }> {
     if (!this.cacheRoomMemberRawPayload) {
       throw new Error('cacheRoomMemberRawPayload is not init')
