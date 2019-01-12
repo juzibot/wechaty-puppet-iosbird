@@ -59,19 +59,16 @@ export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
 
   constructor (
-    private endpoint: string,
-    private botId   : string,
+    protected endpoint: string,
+    protected botId   : string,
   ) {
     super()
     log.verbose('IosBirdWebSocket', 'constructor(%s, %s)', this.endpoint, this.botId)
   }
 
-  public async start () {
-    log.verbose('IosbirdWebSocket', 'start()')
+  protected async initWebSocket () {
+    log.verbose('IosbirdWebSocket', 'initWebSocket()')
     this.ws = new WebSocket(`ws://${this.endpoint}`)
-    await this.initWebSocket()
-  }
-  private async initWebSocket () {
     if (!this.ws) {
       throw new Error('There is no websocket connect')
     }

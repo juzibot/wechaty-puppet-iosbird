@@ -17,10 +17,6 @@
  *
  */
 import path  from 'path'
-import os from 'os'
-import fs                           from 'fs-extra'
-
-import {FlashStoreSync}             from 'flash-store'
 
 import {
   FileBox,
@@ -72,6 +68,7 @@ import {
   IosbirdRoomMemberPayload,
   IosbirdMessageType
 }                                   from './iosbird-schema'
+import { IosbirdManager } from './iosbird-manager';
 
 
 export interface IosbirdRoomRawPayload {
@@ -89,95 +86,14 @@ export class PuppetIosbird extends Puppet {
 
   private loopTimer?: NodeJS.Timer
 
-  private websocket: IosbirdWebSocket
+  private iosbirdManager: IosbirdManager
 
-  private cacheContactRawPayload?     : FlashStoreSync<string, IosbirdContactPayload>
-  private cacheRoomRawPayload?        : FlashStoreSync<string, IosbirdContactPayload>
-  private cacheRoomMemberRawPayload?  : FlashStoreSync<string, {
-    [contactId: string]: IosbirdRoomMemberPayload,
-  }>
-
-  private async initCache (
-    userId : string,
-  ): Promise<void> {
-    log.verbose('PuppetPadchatManager', 'initCache(%s)', userId)
-
-    if (   this.cacheContactRawPayload
-        || this.cacheRoomMemberRawPayload
-        || this.cacheRoomRawPayload
-    ) {
-      throw new Error('cache exists')
-    }
-
-    const baseDir = path.join(
-      os.homedir(),
-      path.sep,
-      '.wechaty',
-      'puppet-iosbird-cache',
-      path.sep,
-      userId,
-    )
-
-    const baseDirExist = await fs.pathExists(baseDir)
-
-    if (!baseDirExist) {
-      await fs.mkdirp(baseDir)
-    }
-
-    this.cacheContactRawPayload    = new FlashStoreSync(path.join(baseDir, 'contact-raw-payload'))
-    this.cacheRoomMemberRawPayload = new FlashStoreSync(path.join(baseDir, 'room-member-raw-payload'))
-    this.cacheRoomRawPayload       = new FlashStoreSync(path.join(baseDir, 'room-raw-payload'))
-
-    await Promise.all([
-      this.cacheContactRawPayload.ready(),
-      this.cacheRoomMemberRawPayload.ready(),
-      this.cacheRoomRawPayload.ready(),
-    ])
-
-    const roomMemberTotalNum = [...this.cacheRoomMemberRawPayload.values()].reduce(
-      (accuVal, currVal) => {
-        return accuVal + Object.keys(currVal).length
-      },
-      0,
-    )
-
-    log.verbose('PuppetIosbird', 'initCache() inited %d Contacts, %d RoomMembers, %d Rooms, cachedir="%s"',
-                                      this.cacheContactRawPayload.size,
-                                      roomMemberTotalNum,
-                                      this.cacheRoomRawPayload.size,
-                                      baseDir,
-              )
-  }
-
-  private async releaseCache (): Promise<void> {
-    log.verbose('PuppetIosbird', 'releaseCache()')
-
-    if (   this.cacheContactRawPayload
-        && this.cacheRoomMemberRawPayload
-        && this.cacheRoomRawPayload
-    ) {
-      log.silly('PuppetIosbird', 'releaseCache() closing caches ...')
-
-      await Promise.all([
-        this.cacheContactRawPayload.close(),
-        this.cacheRoomMemberRawPayload.close(),
-        this.cacheRoomRawPayload.close(),
-      ])
-
-      this.cacheContactRawPayload    = undefined
-      this.cacheRoomMemberRawPayload = undefined
-      this.cacheRoomRawPayload       = undefined
-
-      log.silly('PuppetIosbird', 'releaseCache() cache closed.')
-    } else {
-      log.verbose('PuppetIosbird', 'releaseCache() cache not exist.')
-    }
-  }
 
   constructor (
     public options: PuppetOptions = {},
   ) {
     super(options)
+    this.iosbirdManager = new IosbirdManager (WEBSOCKET_SERVER, BOT_ID)
     const lruOptions: LRU.Options = {
       max: 1000,
       // length: function (n) { return n * 2},
@@ -188,7 +104,6 @@ export class PuppetIosbird extends Puppet {
     }
 
     this.cacheIosbirdMessagePayload = new LRU<string, IosbirdMessagePayload>(lruOptions)
-     this.websocket = new IosbirdWebSocket(WEBSOCKET_SERVER, BOT_ID)
   }
 
   public async start (): Promise<void> {
@@ -196,20 +111,20 @@ export class PuppetIosbird extends Puppet {
 
     this.state.on('pending')
     // await some tasks...
-    await this.initCache(BOT_ID)
-    this.websocket.on('login', (id) => {
+    this.iosbirdManager.on('login', (id) => {
       this.id = id
+
       this.emit('login', this.id as string)
       this.state.on(true)
     })
-    this.websocket.on('error', (error: Error) => {
+    this.iosbirdManager.on('error', (error: Error) => {
       this.emit('error', error)
     })
 
     /**
      * Save meaage for future usage
      */
-    this.websocket.on('message', (message: IosbirdMessagePayload) => {
+    this.iosbirdManager.on('message', (message: IosbirdMessagePayload) => {
       this.cacheIosbirdMessagePayload.set(message.msgId, message)
 
       // TODO:
@@ -218,7 +133,7 @@ export class PuppetIosbird extends Puppet {
        */
       this.emit('message', message.msgId)
     })
-    await this.websocket.start()
+    await this.iosbirdManager.start()
   }
 
   public async stop (): Promise<void> {
@@ -231,7 +146,7 @@ export class PuppetIosbird extends Puppet {
     }
 
     this.state.off('pending')
-    await this.releaseCache()
+    await this.iosbirdManager.stop()
     if (this.loopTimer) {
       clearInterval(this.loopTimer)
     }
@@ -329,28 +244,11 @@ export class PuppetIosbird extends Puppet {
 
   public async contactRawPayload (id: string): Promise<IosbirdContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayload(%s)', id)
-    if (! this.cacheContactRawPayload) {
-      throw new Error('cacheContactRawPayload is not exists')
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
     }
-    let rawContactPayload = this.cacheContactRawPayload.get(id)
-    if (rawContactPayload) {
-      return rawContactPayload
-    }
-    const contactList = await this.websocket.syncContactAndRoom()
-    contactList.list.map((contact) => {
-      if (contact.c_type === '0') {
-        const contactId = contact.id.split('$')[1]
-        contact.id        = contactId
-        if (contactId === id){
-          rawContactPayload = contact
-        }
-        this.cacheContactRawPayload!.set(contactId, contact)
-      }
-    })
-    if (!rawContactPayload) {
-      throw new Error(`The contact of contactId: ${id} is not exisit`)
-    }
-    return rawContactPayload
+    const rawPayload = await this.iosbirdManager.contactRawPayload(id)
+    return rawPayload
   }
 
   public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
@@ -496,11 +394,11 @@ export class PuppetIosbird extends Puppet {
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, text)
       if (receiver.roomId) {
-        this.websocket.sendMessage(receiver.roomId, text, IosbirdMessageType.TEXT)
+        this.iosbirdManager.sendMessage(receiver.roomId, text, IosbirdMessageType.TEXT)
         return
       }
     if (receiver.contactId) {
-      this.websocket.sendMessage(receiver.contactId, text, IosbirdMessageType.TEXT)
+      this.iosbirdManager.sendMessage(receiver.contactId, text, IosbirdMessageType.TEXT)
     }
 
   }
@@ -552,18 +450,18 @@ export class PuppetIosbird extends Puppet {
          * Send Private Message
          */
         if (receiver.roomId) {
-          this.websocket.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.TEXT)
+          this.iosbirdManager.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.TEXT)
         } else if (receiver.contactId) {
-          this.websocket.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.TEXT)
+          this.iosbirdManager.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.TEXT)
         } else {
           throw new Error(`receiver can't be null`)
         }
         break
       case IosbirdMessageType.PICTURE:
         if (receiver.roomId) {
-          this.websocket.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.PICTURE)
+          this.iosbirdManager.sendMessage(receiver.roomId, rawPayload.content, IosbirdMessageType.PICTURE)
         } else if (receiver.contactId) {
-          this.websocket.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.PICTURE)
+          this.iosbirdManager.sendMessage(receiver.contactId, rawPayload.content, IosbirdMessageType.PICTURE)
         } else {
           throw new Error(`receiver can't be null`)
         }
@@ -582,29 +480,11 @@ export class PuppetIosbird extends Puppet {
     id: string,
   ): Promise<IosbirdContactPayload> {
     log.verbose('PuppetIosbird', 'roomRawPayload(%s)', id)
-
-    if (! this.cacheRoomRawPayload) {
-      throw new Error('cacheRoomRawPayload is not exists')
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
     }
-    let rawRoomPayload = this.cacheRoomRawPayload.get(id)
-    if (rawRoomPayload) {
-      return rawRoomPayload
-    }
-    const roomList = await this.websocket.syncContactAndRoom()
-    roomList.list.map((room) => {
-      if (room.c_type === '1') {
-        const roomId = room.id.split('$')[1]
-        if (roomId === id) {
-          rawRoomPayload = room
-        }
-        room.id = roomId
-        this.cacheRoomRawPayload!.set(roomId, room)
-      }
-    })
-    if (rawRoomPayload) {
-      return rawRoomPayload
-    }
-    throw new Error(`The room of id: ${id} is not exists!`)
+    const rawPayload = await this.iosbirdManager.roomRawPayload(id)
+    return rawPayload
   }
 
   public async roomRawPayloadParser (
@@ -623,11 +503,10 @@ export class PuppetIosbird extends Puppet {
 
   public async roomList (): Promise<string[]> {
     log.verbose('PuppetIosbird', 'roomList()')
-    if (!this.cacheRoomRawPayload) {
-      throw new Error('cache not inited' )
+    if (! this.iosbirdManager) {
+      throw new Error('no iosbird manager')
     }
-    const roomIdList = [...this.cacheRoomRawPayload.keys()]
-    log.verbose('PuppetIosbird', 'roomList()=%d', roomIdList.length)
+    const roomIdList = await this.iosbirdManager.getRoomIdList()
     return roomIdList
   }
 
@@ -698,29 +577,24 @@ export class PuppetIosbird extends Puppet {
 
   public async roomMemberList (roomId: string) : Promise<string[]> {
     log.verbose('PuppetIosbird', 'roommemberList(%s)', roomId)
-    if (!this.cacheRoomMemberRawPayload) {
-      throw new Error('cacheRoomMemberRawPayload is not init')
+    if (!this.iosbirdManager) {
+      throw new Error('no padchat manager')
     }
-    if (this.cacheRoomMemberRawPayload.has(roomId)) {
-      const memberListDic = this.cacheRoomMemberRawPayload.get(roomId)
-      return Object.keys(memberListDic!)
-    }
-    const roomMemberListDic = await this.websocket.syncRoomMembers(roomId)
-    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
-    return Object.keys(roomMemberListDic)
+    const memberList = await this.iosbirdManager.getRoomMemberIdList(roomId)
+    return memberList
   }
 
   public async roomMemberRawPayload (roomId: string, contactId: string): Promise<IosbirdRoomMemberPayload>  {
     log.verbose('PuppetIosbird', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
-    if (!this.cacheRoomMemberRawPayload) {
-      throw new Error('cacheRoomMemberRawPayload is not init')
+    if (!this.iosbirdManager) {
+      throw new Error('no padchat manager')
     }
-    if (this.cacheRoomMemberRawPayload.has(roomId)) {
-      return this.cacheRoomMemberRawPayload.get(roomId)![contactId]
+
+    const memberDictRawPayload = await this.iosbirdManager.roomMemberRawPayload(roomId)
+    if (!memberDictRawPayload) {
+      throw new Error('roomId not found: ' + roomId)
     }
-    const roomMemberListDic = await this.websocket.syncRoomMembers(roomId)
-    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
-    return roomMemberListDic[contactId]
+    return memberDictRawPayload[contactId]
   }
 
   public async roomMemberRawPayloadParser (rawPayload: IosbirdRoomMemberPayload): Promise<RoomMemberPayload>  {
