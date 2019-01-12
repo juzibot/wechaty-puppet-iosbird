@@ -1,5 +1,5 @@
 import { PuppetIosbird } from '../src/puppet-iosbird'
-import { Wechaty, Message    } from '../wechaty/src'
+import { Wechaty, Message, Contact    } from '../wechaty/src'
 import { MessageType } from '../wechaty-puppet/src';
 
 const puppet  = new PuppetIosbird()
@@ -21,32 +21,32 @@ bot
     case MessageType.Text: {
       console.log('#####################################')
       console.log('message type is text')
-      console.log('#####################################')
+      console.log('*************************************')
       break
     }
     case MessageType.Image: {
       console.log('#####################################')
       console.log('message type is image')
-      console.log('#####################################')
+      console.log('*************************************')
       break
     }
 
     case MessageType.Emoticon: {
       console.log('#####################################')
       console.log('message type is Emotion')
-      console.log('#####################################')
+      console.log('*************************************')
       break
     }
     case MessageType.Audio: {
       console.log('#####################################')
       console.log('message type is Audio')
-      console.log('#####################################')
+      console.log('*************************************')
       break
     }
     default: {
       console.log('#####################################')
       console.log('message type is Other')
-      console.log('#####################################')
+      console.log('*************************************')
       break
     }
 
@@ -54,8 +54,17 @@ bot
 
   console.log('#####################################')
   console.log('message content:' + content)
-  console.log('#####################################')
+  console.log('*************************************')
 
+  /**
+   * Contact
+   */
+
+  const contact: Contact = message.from()!
+  const contactData = contact as any
+  console.log('#####################################')
+  console.log('contact: avater: ' + contactData.payload.avatar)
+  console.log('*************************************')
 
   /**
    * Room
@@ -68,6 +77,7 @@ bot
     await filebox.toFile(name, true)
     console.log((await room.topic()))
   }
+
 })
 .start()
 .catch(async (e) => {
