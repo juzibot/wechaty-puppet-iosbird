@@ -42,6 +42,7 @@ import {
   RoomPayload,
 
   UrlLinkPayload,
+  MessageType,
 }                                   from '../wechaty-puppet/src'
 
 import {
@@ -67,6 +68,7 @@ import {
   IosbirdMessageType
 }                                   from './iosbird-schema'
 import { IosbirdManager } from './iosbird-manager';
+import { linkMessageParser } from './pure-function-helpers/message-link-payload-parser';
 
 
 export interface IosbirdRoomRawPayload {
@@ -234,7 +236,6 @@ export class PuppetIosbird extends Puppet {
 
     /**
      * 1. set
-     * TODO:
      */
     if (file) {
       return
@@ -294,10 +295,14 @@ export class PuppetIosbird extends Puppet {
   // TODO:
   public async messageUrl (messageId: string)  : Promise<UrlLinkPayload> {
     log.verbose('PuppetIosbird', 'messageUrl(%s)')
+    const rawPayload = await this.messageRawPayload(messageId)
+    const payload = await this.messagePayload(messageId)
 
-    return {
-      title : 'iosbird title',
-      url   : 'https://iosbird.url',
+    if (payload.type !== MessageType.Url) {
+      throw new Error('Can not get url from non url payload')
+    } else {
+      const link = await linkMessageParser(rawPayload)
+      return link
     }
   }
 
