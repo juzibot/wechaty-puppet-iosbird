@@ -254,11 +254,12 @@ export class PuppetIosbird extends Puppet {
   public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
     const payload: ContactPayload = {
-      avatar : 'to do',
-      gender : ContactGender.Unknown,
-      id     : rawPayload.id,
-      name   : rawPayload.name!,
-      type   : ContactType.Unknown,
+      avatar: 'to do',
+      gender: ContactGender.Unknown,
+      id    : rawPayload.id,
+      name  : rawPayload.name!,
+      type  : ContactType.Unknown,
+      alias : rawPayload.nick,
     }
     return payload
   }

@@ -27,6 +27,13 @@ export enum Type {
   IOS = 'ios',
 }
 
+interface RoomMemberDict {
+  roomId: string,
+  roomMemberDict: {
+    [contactId: string]: IosbirdRoomMemberPayload
+  },
+}
+
 export interface MessagePayloadOfSending {
   id       : string,
   botId    : string,               // 机器人ID
@@ -72,6 +79,8 @@ export class IosbirdWebSocket extends EventEmitter {
     if (!this.ws) {
       throw new Error('There is no websocket connect')
     }
+
+    this.ws.setMaxListeners(1000)
     /**
      * Wait the Websocket to be connected
      */
@@ -158,7 +167,7 @@ export class IosbirdWebSocket extends EventEmitter {
     })
   }
 
-  public async syncRoomMembers (roomId: string): Promise<{[contactId: string]: IosbirdRoomMemberPayload}> {
+  public async syncRoomMembers (roomId: string): Promise<RoomMemberDict> {
     if (!this.ws) {
       throw new Error('syncRoomMember(): WS is not connected')
     }
@@ -169,18 +178,36 @@ export class IosbirdWebSocket extends EventEmitter {
       type  : Type.WEB,
     }
     this.ws.send(JSON.stringify(options))
-    return new Promise<{[contactId: string]: IosbirdRoomMemberPayload}>((resolve) => {
+    return new Promise<RoomMemberDict>((resolve) => {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
         if (messagePayload.action === Action.ROOM_MEMBER) {
           const memberList = messagePayload.list
-          const roomMemberDic: {[contactId: string]: IosbirdRoomMemberPayload} = {}
+          /**
+           * There is a special situation
+           * {
+           *   "status": 10001,
+           *   "id": "wxid_tdax1huk5hgs12",
+           *   "u_id": "9500068146@chatroom",
+           *   "msg": "群的成员数为空？？请联系技术",
+           *   "type": "ios",
+           *   "action": "group_user_list"
+           * }
+           */
+          const roomMemberDict: {[contactId: string]: IosbirdRoomMemberPayload} = {}
+          const result: RoomMemberDict = {
+            roomId        : messagePayload.u_id as string,
+            roomMemberDict: roomMemberDict,
+          }
+          if (!memberList) {
+            return resolve(result)
+          }
           memberList.map((member: IosbirdRoomMemberPayload) => {
             const contactId = member.wechat_id.split('$')[1]
             member.wechat_id = contactId
-            roomMemberDic[contactId] = member
+            roomMemberDict[contactId] = member
           })
-          resolve(roomMemberDic)
+          resolve(result)
         }
       })
     })

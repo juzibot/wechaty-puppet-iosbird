@@ -1,7 +1,7 @@
 import { IosbirdWebSocket } from './iosbird-ws'
 import { FlashStoreSync } from 'flash-store'
-import { IosbirdContactPayload, IosbirdRoomMemberPayload, IosbirdMessagePayload } from './iosbird-schema'
-import { log, WEBSOCKET_SERVER, BOT_ID } from './config'
+import { IosbirdContactPayload, IosbirdRoomMemberPayload } from './iosbird-schema'
+import { log } from './config'
 import * as path from 'path'
 import os from 'os'
 import fs from 'fs-extra'
@@ -22,6 +22,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     log.verbose('IosbirdManager', 'start()')
     await this.initCache(this.botId)
     await super.initWebSocket()
+    await this.syncContactAndRoom()
+    await this.syncAllRoomMember()
   }
 
   public async stop () {
@@ -173,9 +175,9 @@ export class IosbirdManager extends IosbirdWebSocket {
       const memberListDic = this.cacheRoomMemberRawPayload.get(roomId)
       return Object.keys(memberListDic!)
     }
-    const roomMemberListDic = await this.syncRoomMembers(roomId)
-    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
-    return Object.keys(roomMemberListDic)
+    const roomMemberListDict = await this.syncRoomMembers(roomId)
+    this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
+    return Object.keys(roomMemberListDict)
   }
 
   public async roomMemberRawPayload(roomId: string): Promise<{ [contactId: string]: IosbirdRoomMemberPayload }> {
@@ -185,8 +187,20 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (this.cacheRoomMemberRawPayload.has(roomId)) {
       return this.cacheRoomMemberRawPayload.get(roomId)!
     }
-    const roomMemberListDic = await this.syncRoomMembers(roomId)
-    this.cacheRoomMemberRawPayload.set(roomId, roomMemberListDic)
-    return roomMemberListDic
+    const roomMemberListDict = await this.syncRoomMembers(roomId)
+    this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
+    return roomMemberListDict.roomMemberDict
+  }
+
+  public async syncAllRoomMember(): Promise<void> {
+    log.verbose('IosbirdManager', 'syncRoomMember()')
+    if (! this.cacheRoomMemberRawPayload) {
+      throw new Error('not cache: cacheRoomMemberRawPayload')
+    }
+    const roomList = await this.getRoomIdList()
+    for (const roomId of roomList) {
+      const roomMemberListDict = await this.syncRoomMembers(roomId)
+      this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
+    }
   }
 }
