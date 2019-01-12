@@ -16,7 +16,6 @@
  *   limitations under the License.
  *
  */
-import path  from 'path'
 
 import {
   FileBox,

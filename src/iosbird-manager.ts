@@ -22,7 +22,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     log.verbose('IosbirdManager', 'start()')
     await this.initCache(this.botId)
     await super.initWebSocket()
-    await this.syncContactAndRoom()
+    await this.syncContactsAndRooms()
     await this.syncAllRoomMember()
   }
 
@@ -200,6 +200,33 @@ export class IosbirdManager extends IosbirdWebSocket {
     const roomMemberListDict = await this.syncRoomMembers(roomId)
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     return roomMemberListDict.roomMemberDict
+  }
+
+  public async syncContactsAndRooms (): Promise<void> {
+    log.verbose('IosbirdManager', 'syncContactsAndRooms ()')
+    if ( (!this.cacheContactRawPayload) || (!this.cacheRoomRawPayload)) {
+      throw new Error('cache is not exists')
+    }
+    const roomAndContactList = await this.syncContactAndRoom()
+    roomAndContactList.list.map((value) => {
+      const id = value.id.split('$')[1]
+      /**
+       * Sync Room
+       */
+      if (value.c_type === '1') {
+        this.cacheRoomRawPayload!.set(id, value)
+      }
+      /**
+       * Sync Contact
+       */
+      if (value.c_type === '0') {
+        this.cacheContactRawPayload!.set(id, value)
+      }
+    })
+    log.verbose('PuppetIosbird', 'syncContactsAndRooms() sync %d Contacts, %d Rooms',
+      this.cacheContactRawPayload.size,
+      this.cacheRoomRawPayload.size,
+    )
   }
 
   public async syncAllRoomMember(): Promise<void> {
