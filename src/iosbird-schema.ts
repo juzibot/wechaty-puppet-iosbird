@@ -1,4 +1,4 @@
-import { Type, ContactType } from './iosbird-ws'
+import { Type, ContactType, Action } from './iosbird-ws'
 
 export enum IosbirdMessageType {
   TEXT       = 0,        // 文本
@@ -170,6 +170,7 @@ export interface IosbirdContactPayload {
   type                     : Type,
   mute_session             : boolean,
   name?                    : string,        // name of contact
+  avatar?                  : string,        // avatar of room and contact
 }
 
 export interface IosbirdRoomMemberPayload {
@@ -183,4 +184,26 @@ export interface IosbirdRoomMemberPayload {
   'wechat_img'      : string,   // 成员的头像
   'wechat_real_nick': string,   // 群昵称
   'wechat_nick'     : string,   // 微信昵称
+}
+
+
+export interface IosbirdAvatarSchema {
+  /**
+   * { id: 'wxid_tdax1huk5hgs12',
+   *   list:
+   *    [ { id: 'wxid_tdax1huk5hgs12$xiaonian16',
+   *        img:
+   *         'http://wx.qlogo.cn/mmhead/ver_1/ZKTUb2r7GzLiaUsHRzWbPPXGoBbFpPBKWrqNVzUNNLBYGubWzWvNiaYvkfVeedxjG7jaAnCompib85d7PhylWXRGw/132' },
+   *      { id: 'wxid_tdax1huk5hgs12$dengzhuojia',
+   *        img:
+   *         'http://wx.qlogo.cn/mmhead/ver_1/4AewylQmjaJBGF1o2VBkJVh5NR1HNTPqV2GcpqwjJCwRZnjMn40jZMezdlGgqoGqPo217apuuIfQ7aSIryW0GbnBHQ6DMtBOLXqbr6xymm8/132' }
+   *    ],
+   *   type: 'ios',
+   *   action: 'avatar_list'
+   * }
+   */
+  id    : string,
+  list  : { id: string, img: string}[],
+  type  : Type,
+  action: Action,
 }

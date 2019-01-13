@@ -269,7 +269,7 @@ export class PuppetIosbird extends Puppet {
   public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
     const payload: ContactPayload = {
-      avatar: 'http://wx.qlogo.cn/mmhead/ver_1/iaiaSEnR0icJwcQVlic1COUdITdA07JgUibMGQrYT6R3JvolLEdtZKtqwZ75rtIlWcrL7ruNdQmN9makdqLHyXIQaf4uuIuEgsKF6LVDpqibpWXGc/132',
+      avatar: rawPayload.avatar || 'http://www.botorange.com',
       gender: ContactGender.Unknown,
       id    : rawPayload.id,
       name  : rawPayload.name!,

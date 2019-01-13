@@ -7,8 +7,9 @@ import {
   IosbirdMessageType,
   IosbirdContactPayload,
   IosbirdMessagePayload,
-  IosbirdRoomMemberPayload
-}                             from './iosbird-schema';
+  IosbirdRoomMemberPayload,
+  IosbirdAvatarSchema,
+}                             from './iosbird-schema'
 
 const uuid = require('uuidv4')
 
@@ -210,6 +211,27 @@ export class IosbirdWebSocket extends EventEmitter {
           resolve(result)
         }
       })
+    })
+  }
+
+  public getAvatar () {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id    : '1',
+      type  : Type.WEB,
+      action: Action.AVATAR_LIST,
+      botId : this.botId,
+    }
+    this.ws.send(JSON.stringify(options))
+
+    this.ws!.on('message', (message) => {
+      const messagePayload = JSON.parse(message as string)
+      if (messagePayload.action === Action.AVATAR_LIST) {
+        this.emit('avatar', messagePayload as IosbirdAvatarSchema)
+      }
     })
   }
 }

@@ -1,6 +1,6 @@
 import { IosbirdWebSocket } from './iosbird-ws'
 import { FlashStoreSync } from 'flash-store'
-import { IosbirdContactPayload, IosbirdRoomMemberPayload } from './iosbird-schema'
+import { IosbirdContactPayload, IosbirdRoomMemberPayload, IosbirdAvatarSchema } from './iosbird-schema'
 import { log } from './config'
 import * as path from 'path'
 import os from 'os'
@@ -24,6 +24,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     await super.initWebSocket()
     await this.syncContactsAndRooms()
     await this.syncAllRoomMember()
+    this.syncAvatarAsync()
   }
 
   public async stop () {
@@ -239,5 +240,23 @@ export class IosbirdManager extends IosbirdWebSocket {
       const roomMemberListDict = await this.syncRoomMembers(roomId)
       this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     }
+  }
+
+  public syncAvatarAsync () {
+    log.verbose('IosbirdManager', 'syncAvatarAsync()')
+    if (! this.cacheContactRawPayload) {
+      throw new Error('cacheContactRawPayload not exist')
+    }
+    this.on('avatar', (avatarList: IosbirdAvatarSchema) => {
+      const imgList = avatarList.list
+      imgList.map(imgInfo => {
+        const id = imgInfo.id.split('$')[1]
+        const contactData = this.cacheContactRawPayload!.get(id)
+        if (contactData) {
+          contactData.avatar = imgInfo.img
+        }
+      })
+    })
+    this.getAvatar()
   }
 }
