@@ -52,6 +52,7 @@ import {
   qrCodeForChatie,
   VERSION,
   WEBSOCKET_SERVER,
+  retry,
 }                                   from './config'
 import {
   Type,
@@ -67,8 +68,10 @@ import {
   IosbirdRoomMemberPayload,
   IosbirdMessageType
 }                                   from './iosbird-schema'
-import { IosbirdManager } from './iosbird-manager';
-import { linkMessageParser } from './pure-function-helpers/message-link-payload-parser';
+import { IosbirdManager } from './iosbird-manager'
+import { linkMessageParser } from './pure-function-helpers/message-link-payload-parser'
+import { roomJoinEventMessageParser } from './pure-function-helpers/room-event-join-message-parser'
+import flatten  from 'array-flatten'
 
 
 export interface IosbirdRoomRawPayload {
@@ -125,13 +128,7 @@ export class PuppetIosbird extends Puppet {
      * Save meaage for future usage
      */
     this.iosbirdManager.on('message', (message: IosbirdMessagePayload) => {
-      this.cacheIosbirdMessagePayload.set(message.msgId, message)
-
-      // TODO:
-      /**
-       * Check for Different Message Type
-       */
-      this.emit('message', message.msgId)
+      this.onIosbirdMessage(message)
     })
     await this.iosbirdManager.start()
   }
@@ -166,6 +163,85 @@ export class PuppetIosbird extends Puppet {
     this.id = undefined
 
     // TODO: do the logout job
+  }
+
+  protected async onIosbirdMessage (rawPayload: IosbirdMessagePayload): Promise<void> {
+    log.verbose('PuppetIosbird', 'onIosbirdMessage({id=%s})',
+                                rawPayload.msgId,
+              )
+    /**
+     * 0. Discard messages when not logged in
+     */
+    if (!this.id) {
+      log.warn('PuppetIosbird', 'onIosbirdMessage(%s) discarded message because puppet is not logged-in', JSON.stringify(rawPayload))
+      return
+    }
+
+    /**
+     * 1. Save message for future usage
+     */
+    this.cacheIosbirdMessagePayload.set(
+      rawPayload.msgId,
+      rawPayload,
+    )
+
+    /**
+     * 2. Check for Different Message Types
+     */
+    switch (rawPayload.cnt_type) {
+      case IosbirdMessageType.SYS:
+        await Promise.all([
+          // this.onPadchatMessageFriendshipEvent(rawPayload),
+          ////////////////////////////////////////////////
+          this.onIosbirdMessageRoomEventJoin(rawPayload),
+          // this.onPadchatMessageRoomEventLeave(rawPayload),
+          // this.onPadchatMessageRoomEventTopic(rawPayload),
+        ])
+        break
+      case IosbirdMessageType.PICTURE:
+      case IosbirdMessageType.VEDIO:
+      case IosbirdMessageType.TEXT:
+      default:
+        this.emit('message', rawPayload.msgId)
+        break
+    }
+  }
+
+  /**
+   * Look for room join event
+   */
+  protected async onIosbirdMessageRoomEventJoin (rawPayload: IosbirdMessagePayload): Promise<void> {
+    log.verbose('PuppetIosbird', 'onIosbirdMessageRoomEventJoin({id=%s})', rawPayload.msgId)
+
+    const roomJoinEvent = await roomJoinEventMessageParser(rawPayload)
+
+    if (roomJoinEvent) {
+      const inviteeNameList = roomJoinEvent.inviteeNameList
+      const inviterName     = roomJoinEvent.inviterName
+      const roomId          = roomJoinEvent.roomId
+      log.silly('PuppetIosbird', 'onIosbirdMessageRoomEventJoin() roomJoinEvent="%s"', JSON.stringify(roomJoinEvent))
+      /**
+       * Set Cache Dirty
+       */
+      await this.roomPayloadDirty(roomId)
+      await this.roomMemberPayloadDirty(roomId)
+
+      const inviteeIdList = flatten<string>(
+        await Promise.all(
+          inviteeNameList.map(
+            inviteeName => this.roomMemberSearch(roomId, inviteeName),
+          ),
+        ),
+      )
+
+      const inviterIdList = await this.roomMemberSearch(roomId, inviterName)
+
+      if (inviterIdList.length < 1) {
+        throw new Error('no inviterId found')
+      }
+      const inviterId = inviterIdList[0]
+      this.emit('room-join', roomId, inviteeIdList,  inviterId)
+    }
   }
 
   /**
@@ -465,7 +541,6 @@ export class PuppetIosbird extends Puppet {
     const type = rawPayload.cnt_type
     switch(type) {
       case IosbirdMessageType.TEXT:
-      case undefined:
         /**
          * Send Private Message
          */
@@ -496,6 +571,25 @@ export class PuppetIosbird extends Puppet {
    * Room
    *
    */
+
+  public async roomMemberPayloadDirty (roomId: string) {
+    log.silly('PuppetIosbird', 'roomMemberRawPayloadDirty(%s)', roomId)
+
+    await super.roomMemberPayloadDirty(roomId)
+
+    if (this.iosbirdManager) {
+      this.iosbirdManager.roomMemberRawPayloadDirty(roomId)
+    }
+  }
+
+  public async roomPayloadDirty (roomId: string): Promise<void> {
+    log.verbose('PuppetIosbird', 'roomPayloadDirty(%s)', roomId)
+    if (this.iosbirdManager) {
+      this.iosbirdManager.roomRawPayloadDirty(roomId)
+    }
+
+    await super.roomPayloadDirty(roomId)
+  }
   public async roomRawPayload (
     id: string,
   ): Promise<IosbirdContactPayload> {
@@ -596,7 +690,7 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async roomMemberList (roomId: string) : Promise<string[]> {
-    log.verbose('PuppetIosbird', 'roommemberList(%s)', roomId)
+    log.verbose('PuppetIosbird', 'roomMemberList(%s)', roomId)
     if (!this.iosbirdManager) {
       throw new Error('no padchat manager')
     }

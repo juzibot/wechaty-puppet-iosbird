@@ -25,6 +25,8 @@ export class IosbirdManager extends IosbirdWebSocket {
       this.on('connect', async (botId) => {
         await this.syncContactsAndRooms()
         await this.syncAllRoomMember()
+        // sync avatar of contact
+        await this.syncAvatarAsync()
         this.emit('login', botId)
       })
       await super.initWebSocket()
@@ -38,7 +40,7 @@ export class IosbirdManager extends IosbirdWebSocket {
   private async initCache (
     userId : string,
   ): Promise<void> {
-    log.verbose('PuppetPadchatManager', 'initCache(%s)', userId)
+    log.verbose('IosbirdManager', 'initCache(%s)', userId)
 
     if (   this.cacheContactRawPayload
         || this.cacheRoomMemberRawPayload
@@ -120,21 +122,13 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawContactPayload) {
       return rawContactPayload
     }
-    const contactList = await this.syncContactAndRoom()
-    contactList.list.map((contact) => {
-      if (contact.c_type === '0') {
-        const contactId = contact.id.split('$')[1]
-        contact.id        = contactId
-        if (contactId === id){
-          rawContactPayload = contact
-        }
-        this.cacheContactRawPayload!.set(contactId, contact)
-      }
-    })
-    if (!rawContactPayload) {
-      throw new Error(`The contact of contactId: ${id} is not exisit`)
+    await this.syncContactsAndRooms()
+    rawContactPayload = this.cacheContactRawPayload.get(id)
+    if (rawContactPayload) {
+      return rawContactPayload
     }
-    return rawContactPayload
+
+    throw new Error(`The contact of contactId: ${id} is not exisit`)
   }
 
   public async roomRawPayload(id: string): Promise<IosbirdContactPayload> {
@@ -145,17 +139,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawRoomPayload) {
       return rawRoomPayload
     }
-    const roomList = await this.syncContactAndRoom()
-    roomList.list.map((room) => {
-      if (room.c_type === '1') {
-        const roomId = room.id.split('$')[1]
-        if (roomId === id) {
-          rawRoomPayload = room
-        }
-        room.id = roomId
-        this.cacheRoomRawPayload!.set(roomId, room)
-      }
-    })
+    await this.syncContactsAndRooms()
+    rawRoomPayload = this.cacheRoomRawPayload.get(id)
     if (rawRoomPayload) {
       return rawRoomPayload
     }
@@ -176,13 +161,13 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (!this.cacheRoomMemberRawPayload) {
       throw new Error('cacheRoomMemberRawPayload is not init')
     }
-    if (this.cacheRoomMemberRawPayload.has(roomId)) {
-      const memberListDic = this.cacheRoomMemberRawPayload.get(roomId)
-      return Object.keys(memberListDic!)
+    const memberListDic = this.cacheRoomMemberRawPayload.get(roomId)
+    if (memberListDic && Object.keys(memberListDic).length > 0) {
+      return Object.keys(memberListDic)
     }
     const roomMemberListDict = await this.syncRoomMembers(roomId)
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
-    return Object.keys(roomMemberListDict)
+    return Object.keys(roomMemberListDict.roomMemberDict)
   }
 
   public async getContactIdList (): Promise<string[]> {
@@ -232,8 +217,6 @@ export class IosbirdManager extends IosbirdWebSocket {
       this.cacheContactRawPayload.size,
       this.cacheRoomRawPayload.size,
     )
-    // sync avatar of contact
-    await this.syncAvatarAsync()
   }
 
   public async syncAllRoomMember(): Promise<void> {
@@ -283,5 +266,25 @@ export class IosbirdManager extends IosbirdWebSocket {
         this.cacheContactRawPayload!.set(id, contactData)
       }
     })
+  }
+
+  public roomMemberRawPayloadDirty (
+    roomId: string,
+  ): void {
+    log.verbose('IosbirdManager', 'roomMemberRawPayloadDirty(%d)', roomId)
+    if (!this.cacheRoomMemberRawPayload) {
+      throw new Error('cache not inited')
+    }
+    this.cacheRoomMemberRawPayload.delete(roomId)
+  }
+
+  public roomRawPayloadDirty (
+    roomId: string,
+  ): void {
+    log.verbose('IosbirdManager', 'roomRawPayloadDirty(%d)', roomId)
+    if (!this.cacheRoomRawPayload) {
+      throw new Error('cache not inited' )
+    }
+    this.cacheRoomRawPayload.delete(roomId)
   }
 }

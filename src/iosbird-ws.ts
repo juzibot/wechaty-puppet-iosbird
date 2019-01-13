@@ -117,12 +117,45 @@ export class IosbirdWebSocket extends EventEmitter {
       const messagePayload = JSON.parse(message as string)
       if ( messagePayload.action === Action.CONTACT_LIST ||
            messagePayload.action === Action.AVATAR_LIST ||
-           messagePayload.action === Action.ROOM_MEMBER_LIST ||
-           messagePayload.status
+           messagePayload.action === Action.ROOM_MEMBER_LIST
           ) {
         return
       }
       messagePayload.msgId = uuid() as string
+      /**
+       * 系统消息
+       * {
+       *  "action": "chat",
+       *  "to_type": "web",
+       *  "s_type": "ios",
+       *  "id": "wxid_tdax1huk5hgs12",
+       *  "content": "\"林贻民记录\"邀请\"桔小秘\"加入了群聊",
+       *  "m_type": "10000",
+       *  "mem_id": "wxid_tdax1huk5hgs12$",
+       *  "u_id": "5212109738@chatroom",
+       *  "type": "ios",
+       *  "name": "系统消息"
+       * }
+       *
+       * 文本消息
+       * {
+       *   "action": "chat",
+       *   "to_type": "web",
+       *   "content": "哈哈",
+       *   "id": "wxid_tdax1huk5hgs12",
+       *   "s_type": "web",
+       *   "mem_id": "",
+       *   "u_id": "wxid_j76jk7muhgqz22",
+       *   "type": "ios",
+       *   "name": "林贻民"
+       * }
+       */
+      if ((! messagePayload.cnt_type) && (!messagePayload.m_type)) {
+        messagePayload.cnt_type = IosbirdMessageType.TEXT
+      }
+      if (messagePayload.name === '系统消息'){
+        messagePayload.cnt_type = IosbirdMessageType.SYS
+      }
       this.emit('message', messagePayload as IosbirdMessagePayload)
     })
   }

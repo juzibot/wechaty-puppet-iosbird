@@ -7,6 +7,7 @@ export enum IosbirdMessageType {
   LINK       = 495,      // 链接
   FILE       = 6000,     // 文件
   VEDIO      = 6001,     // 视频
+  SYS        = 10000,    // 系统消息
   RED_PACKET = 492001,   // 红包
   AT         = 3110,     // @ member
 }
@@ -120,6 +121,7 @@ export interface IosbirdMessagePayload {
   s_type       : Type,
   id           : string,               // Bot Id
   cnt_type?    : IosbirdMessageType,   // Message Type
+  m_type?      : string,               // system message
   content      : string,               // Message Content
   mem_id       : string,               // Who is send the message in the room
   u_id         : string,               // Contact Id or Room Id
