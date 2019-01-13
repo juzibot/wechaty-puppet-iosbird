@@ -14,13 +14,13 @@ import {
 const uuid = require('uuidv4')
 
 export enum Action {
-  ENTER             = 'enter',            // 与插件连接成功
-  CHAT              = 'chat',             // 收发消息
-  ANNOUNCEMENT      = 'announcement',     // 发送群公告
-  GAIN_CONTACT_LIST = 'gain_user_list',   // 请求联系人信息列表
-  CONTACT_LIST      = 'user_list',        // 收到联系人信息列表
-  AVATAR_LIST       = 'avatar_list',      // 群头像
-  ROOM_MEMBER       = 'group_user_list',  // 获取群成员信息列表
+  ENTER             = 'enter',             // 与插件连接成功
+  CHAT              = 'chat',              // 收发消息
+  ANNOUNCEMENT      = 'announcement',      // 发送群公告
+  GAIN_CONTACT_LIST = 'gain_user_list',    // 请求联系人信息列表
+  CONTACT_LIST      = 'user_list',         // 收到联系人信息列表
+  AVATAR_LIST       = 'avatar_list',       // 群头像
+  ROOM_MEMBER_LIST  = 'group_user_list',   // 获取群成员信息列表
 }
 
 export enum Type {
@@ -95,7 +95,7 @@ export class IosbirdWebSocket extends EventEmitter {
           type: Type.WEB,
         }
         this.ws!.send(JSON.stringify(msg))
-        this.emit('login', this.botId)
+        this.emit('connect', this.botId)
         return resolve()
       })
       this.ws!.once('error', (error) => {
@@ -105,6 +105,7 @@ export class IosbirdWebSocket extends EventEmitter {
       })
       this.ws!.once('close', (reason, code) => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(close) code: %s, reason: %s', reason, code)
+        this.emit('close', reason, code)
         return reject()
       })
     })
@@ -116,6 +117,7 @@ export class IosbirdWebSocket extends EventEmitter {
       const messagePayload = JSON.parse(message as string)
       if ( messagePayload.action === Action.CONTACT_LIST ||
            messagePayload.action === Action.AVATAR_LIST ||
+           messagePayload.action === Action.ROOM_MEMBER_LIST ||
            messagePayload.status
           ) {
         return
@@ -173,7 +175,7 @@ export class IosbirdWebSocket extends EventEmitter {
       throw new Error('syncRoomMember(): WS is not connected')
     }
     const options = {
-      action: Action.ROOM_MEMBER,
+      action: Action.ROOM_MEMBER_LIST,
       u_id  : roomId,
       botId : this.botId,
       type  : Type.WEB,
@@ -182,7 +184,7 @@ export class IosbirdWebSocket extends EventEmitter {
     return new Promise<RoomMemberDict>((resolve) => {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
-        if (messagePayload.action === Action.ROOM_MEMBER) {
+        if (messagePayload.action === Action.ROOM_MEMBER_LIST) {
           const memberList = messagePayload.list
           /**
            * There is a special situation

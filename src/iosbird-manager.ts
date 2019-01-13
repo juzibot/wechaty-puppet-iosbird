@@ -18,13 +18,17 @@ export class IosbirdManager extends IosbirdWebSocket {
 
   }
 
-  public async start() {
+  public async start(): Promise<void> {
     log.verbose('IosbirdManager', 'start()')
     await this.initCache(this.botId)
-    await super.initWebSocket()
-    await this.syncContactsAndRooms()
-    await this.syncAllRoomMember()
-    await this.syncAvatarAsync()
+    return new Promise<void> (async (resolve, reject) => {
+      this.on('connect', async (botId) => {
+        await this.syncContactsAndRooms()
+        await this.syncAllRoomMember()
+        this.emit('login', botId)
+      })
+      await super.initWebSocket()
+    })
   }
 
   public async stop () {
@@ -228,6 +232,8 @@ export class IosbirdManager extends IosbirdWebSocket {
       this.cacheContactRawPayload.size,
       this.cacheRoomRawPayload.size,
     )
+    // sync avatar of contact
+    await this.syncAvatarAsync()
   }
 
   public async syncAllRoomMember(): Promise<void> {
@@ -274,6 +280,7 @@ export class IosbirdManager extends IosbirdWebSocket {
       const contactData = this.cacheContactRawPayload!.get(id)
       if (contactData) {
         contactData.avatar = imgInfo.img
+        this.cacheContactRawPayload!.set(id, contactData)
       }
     })
   }
