@@ -6,55 +6,44 @@ const puppet  = new PuppetIosbird()
 const bot = new Wechaty({ puppet })
 
 bot
-.on('scan', (qrcode, status) => console.log('Scan QR Code to login'))
 .on('login', (user) => console.log(`User ${user} logined`))
 .on('message', async (message) => {
-  console.log(`Message: ${message.text()}`)
-  const content = message.text()
 
+  const content = message.text()
   const messageType = message.type()
 
   /**
    * Message
    */
+  console.log('MessageType:#####################################')
   switch (messageType) {
     case MessageType.Text: {
-      console.log('#####################################')
       console.log('message type is text')
-      console.log('*************************************')
       break
     }
     case MessageType.Image: {
-      console.log('#####################################')
       console.log('message type is image')
-      console.log('*************************************')
       break
     }
 
     case MessageType.Emoticon: {
-      console.log('#####################################')
       console.log('message type is Emotion')
-      console.log('*************************************')
       break
     }
     case MessageType.Audio: {
-      console.log('#####################################')
       console.log('message type is Audio')
-      console.log('*************************************')
       break
     }
     default: {
-      console.log('#####################################')
       console.log('message type is Other')
-      console.log('*************************************')
       break
     }
-
   }
+  console.log('MessageType:*************************************')
 
-  console.log('#####################################')
+  console.log('Message:#####################################')
   console.log('message content:' + content)
-  console.log('*************************************')
+  console.log('Message:*************************************')
 
   /**
    * Contact
@@ -62,9 +51,9 @@ bot
 
   const contact: Contact = message.from()!
   const contactData = contact as any
-  console.log('#####################################')
+  console.log('Contact Avatar:#####################################')
   console.log('contact: avater: ' + contactData.payload.avatar)
-  console.log('*************************************')
+  console.log('Contact Avatar:*************************************')
 
   /**
    * Room
@@ -72,9 +61,11 @@ bot
   const room = message.room()
   if (room) {
     const members = await room.memberAll()
-    const filebox = await members[0].avatar()
-    const name: string = filebox.name
-    await filebox.toFile(name, true)
+    console.log('Room members:#####################################')
+    members.map(member => {
+      console.log('contact: ' + member)
+    })
+    console.log('Room members:*************************************')
     console.log((await room.topic()))
   }
 
