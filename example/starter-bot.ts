@@ -49,11 +49,13 @@ bot
    * Contact
    */
 
-  const contact: Contact = message.from()!
-  const contactData = contact as any
-  console.log('Contact Avatar:#####################################')
-  console.log('contact: avater: ' + contactData.payload.avatar)
-  console.log('Contact Avatar:*************************************')
+  const contact = message.from()
+  if (contact) {
+    const contactData = contact as any
+    console.log('Contact Avatar:#####################################')
+    console.log('contact: avater: ' + contactData.payload.avatar)
+    console.log('Contact Avatar:*************************************')
+  }
 
   /**
    * Room
@@ -65,10 +67,17 @@ bot
     members.map(member => {
       console.log('contact: ' + member)
     })
+    console.log('members length: ' + members.length)
     console.log('Room members:*************************************')
     console.log((await room.topic()))
   }
 
+})
+.on('room-join', async (room, inviteeList, inviter) => {
+  const nameList = inviteeList.map(c => c.name()).join(',')
+  console.log(`Room ${await room.topic()}`)
+  console.log(`got new member ${nameList}`)
+  console.log(`invited by ${inviter}`)
 })
 .start()
 .catch(async (e) => {
