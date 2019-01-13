@@ -1,4 +1,4 @@
-import { IosbirdWebSocket } from './iosbird-ws'
+import { IosbirdWebSocket, Type, Action } from './iosbird-ws'
 import { FlashStoreSync } from 'flash-store'
 import { IosbirdContactPayload, IosbirdRoomMemberPayload, IosbirdAvatarSchema } from './iosbird-schema'
 import { log } from './config'
@@ -24,7 +24,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     await super.initWebSocket()
     await this.syncContactsAndRooms()
     await this.syncAllRoomMember()
-    this.syncAvatarAsync()
+    await this.syncAvatarAsync()
   }
 
   public async stop () {
@@ -242,21 +242,39 @@ export class IosbirdManager extends IosbirdWebSocket {
     }
   }
 
-  public syncAvatarAsync () {
+  public async syncAvatarAsync (): Promise<void> {
     log.verbose('IosbirdManager', 'syncAvatarAsync()')
     if (! this.cacheContactRawPayload) {
       throw new Error('cacheContactRawPayload not exist')
     }
+    const contactNumber = (await this.getContactIdList()).length
+    const avatars: IosbirdAvatarSchema = {
+      id: this.botId,
+      list: [],
+      type: Type.IOS,
+      action: Action.AVATAR_LIST
+    }
     this.on('avatar', (avatarList: IosbirdAvatarSchema) => {
       const imgList = avatarList.list
-      imgList.map(imgInfo => {
-        const id = imgInfo.id.split('$')[1]
-        const contactData = this.cacheContactRawPayload!.get(id)
-        if (contactData) {
-          contactData.avatar = imgInfo.img
-        }
-      })
+      avatars.list =  avatars.list.concat(imgList)
+      log.info('Sync contact:', 'total: %s, completed: %s', contactNumber, avatars.list.length)
     })
     this.getAvatar()
+    // 2分钟内没有加载完,便直接退出
+    let count = 2 * 60
+    while(avatars.list.length < contactNumber) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      if (--count === 0) {
+        log.warn('Can\'t sync avatar in two minutes')
+        break
+      }
+    }
+    avatars.list.map(imgInfo => {
+      const id = imgInfo.id.split('$')[1]
+      const contactData = this.cacheContactRawPayload!.get(id)
+      if (contactData) {
+        contactData.avatar = imgInfo.img
+      }
+    })
   }
 }

@@ -50,7 +50,6 @@ bot
    */
 
   const contact: Contact = message.from()!
-  await contact.sync()
   const contactData = contact as any
   console.log('Contact Avatar:#####################################')
   console.log('contact: avater: ' + contactData.payload.avatar)
