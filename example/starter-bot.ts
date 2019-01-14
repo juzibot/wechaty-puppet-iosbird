@@ -64,8 +64,10 @@ bot
   if (room) {
     const members = await room.memberAll()
     console.log('Room members:#####################################')
-    members.map(member => {
+    members.map(async member => {
       console.log('contact: ' + member)
+      console.log(`contact alias: ${await member.alias()}`)
+      console.log(`contact name: ${member.name()}`)
     })
     console.log('members length: ' + members.length)
     console.log('Room members:*************************************')

@@ -244,7 +244,7 @@ export class IosbirdManager extends IosbirdWebSocket {
 
   public async syncAllRoomMember(): Promise<void> {
     log.verbose('IosbirdManager', 'syncRoomMember()')
-    if (! this.cacheRoomMemberRawPayload) {
+    if (! this.cacheRoomMemberRawPayload || !this.cacheContactRawPayload) {
       throw new Error('not cache: cacheRoomMemberRawPayload')
     }
     const roomList = await this.getRoomIdList()
@@ -253,8 +253,11 @@ export class IosbirdManager extends IosbirdWebSocket {
       this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
       const contactIds = Object.keys(roomMemberListDict.roomMemberDict)
       for (const contactId of contactIds) {
+        if (this.cacheContactRawPayload.has(contactId)) {
+          continue
+        }
         const contactData = memberToContact (roomMemberListDict.roomMemberDict[contactId])
-        this.cacheContactRawPayload!.set(contactId, contactData)
+        this.cacheContactRawPayload.set(contactId, contactData)
       }
     }
   }
