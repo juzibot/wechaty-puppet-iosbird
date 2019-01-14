@@ -1,5 +1,5 @@
 import { PuppetIosbird } from '../src/puppet-iosbird'
-import { Wechaty, Message, Contact    } from '../wechaty/src'
+import { Wechaty, Message, Contact, Room    } from '../wechaty/src'
 import { MessageType } from '../wechaty-puppet/src';
 
 const puppet  = new PuppetIosbird()
@@ -11,6 +11,11 @@ bot
 
   const content = message.text()
   const messageType = message.type()
+
+  if (content === '修改昵称') {
+    const contactSelf = bot.userSelf()
+    await contactSelf.name('wuli舞哩客服')
+  }
 
   /**
    * Message
@@ -73,6 +78,25 @@ bot
     console.log('Room members:*************************************')
     console.log((await room.topic()))
 
+    /**
+     * 建群
+     */
+    if (content === '建群') {
+      await await bot.Room.create(members, 'test12')
+    }
+
+    /**
+     * 修改群名
+     */
+    if (content === '修改群名') {
+      await room.topic('hahahahah')
+    }
+
+    if (content === '获取群二维码') {
+      console.log('获取群二维码:#####################################')
+      console.log(`qrcode: ${await room.qrcode()}`)
+      console.log('获取群二维码:*************************************')
+    }
     /**
      * remove contact from room
      */
