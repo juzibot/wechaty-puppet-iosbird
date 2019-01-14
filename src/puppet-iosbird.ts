@@ -351,6 +351,7 @@ export class PuppetIosbird extends Puppet {
       name  : rawPayload.name!,
       type  : ContactType.Unknown,
       alias : rawPayload.nick,
+      friend: rawPayload.isFriend === 1 ? true : false,
     }
     return payload
   }

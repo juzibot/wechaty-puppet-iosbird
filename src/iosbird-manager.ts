@@ -5,6 +5,7 @@ import { log } from './config'
 import * as path from 'path'
 import os from 'os'
 import fs from 'fs-extra'
+import { memberToContact } from './pure-function-helpers/member-to-contact';
 export class IosbirdManager extends IosbirdWebSocket {
 
   private cacheContactRawPayload?     : FlashStoreSync<string, IosbirdContactPayload>
@@ -180,6 +181,27 @@ export class IosbirdManager extends IosbirdWebSocket {
     return contactIdList
   }
 
+  public getContactLength (isFriend?: boolean): number {
+    if (!this.cacheContactRawPayload) {
+      throw new Error('cache not inited' )
+    }
+    const total = [... this.cacheContactRawPayload.keys()].length
+    if (typeof isFriend === 'undefined') {
+      return total
+    }
+    let friendNumber = 0
+    const contactPayloads = this.cacheContactRawPayload.values()
+    for (const contactData of contactPayloads) {
+      if (contactData.isFriend === 1) {
+        friendNumber++
+      }
+    }
+    if (isFriend) {
+      return friendNumber
+    }
+    return (total - friendNumber)
+  }
+
   public async roomMemberRawPayload(roomId: string): Promise<{ [contactId: string]: IosbirdRoomMemberPayload }> {
     if (!this.cacheRoomMemberRawPayload) {
       throw new Error('cacheRoomMemberRawPayload is not init')
@@ -210,6 +232,7 @@ export class IosbirdManager extends IosbirdWebSocket {
        * Sync Contact
        */
       if (value.c_type === '0') {
+        value.isFriend = 1
         this.cacheContactRawPayload!.set(id, value)
       }
     })
@@ -228,6 +251,11 @@ export class IosbirdManager extends IosbirdWebSocket {
     for (const roomId of roomList) {
       const roomMemberListDict = await this.syncRoomMembers(roomId)
       this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
+      const contactIds = Object.keys(roomMemberListDict.roomMemberDict)
+      for (const contactId of contactIds) {
+        const contactData = memberToContact (roomMemberListDict.roomMemberDict[contactId])
+        this.cacheContactRawPayload!.set(contactId, contactData)
+      }
     }
   }
 
@@ -236,7 +264,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (! this.cacheContactRawPayload) {
       throw new Error('cacheContactRawPayload not exist')
     }
-    const contactNumber = (await this.getContactIdList()).length
+    const contactNumber = this.getContactLength(true)
     const avatars: IosbirdAvatarSchema = {
       id: this.botId,
       list: [],

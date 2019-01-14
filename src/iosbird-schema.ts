@@ -173,6 +173,7 @@ export interface IosbirdContactPayload {
   mute_session             : boolean,
   name?                    : string,        // name of contact
   avatar?                  : string,        // avatar of room and contact
+  isFriend                 : number,        // 与机器人是否为好友(1: 是， 0: 否)
 }
 
 export interface IosbirdRoomMemberPayload {
