@@ -318,4 +318,13 @@ export class IosbirdManager extends IosbirdWebSocket {
     }
     this.cacheRoomRawPayload.delete(roomId)
   }
+
+  public async deleteChatRoomMember (roomId: string, contactId: string): Promise<void> {
+    log.verbose('IosbirdManager', 'deleteChatRoomMember(%s, %s)', roomId, contactId)
+    try {
+      await super.deleteChatRoomMember(roomId, contactId)
+    } catch(err) {
+      log.error('IosbirdManager', 'deleteChatRoomMember() error: %s', err)
+    }
+  }
 }

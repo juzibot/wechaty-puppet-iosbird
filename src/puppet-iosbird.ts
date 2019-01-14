@@ -303,7 +303,6 @@ export class PuppetIosbird extends Puppet {
     // return await this.bridge.WXqr
   }
 
-  // TODO:
   public async contactAvatar (contactId: string)                : Promise<FileBox>
   public async contactAvatar (contactId: string, file: FileBox) : Promise<void>
 
@@ -314,6 +313,7 @@ export class PuppetIosbird extends Puppet {
      * 1. set
      */
     if (file) {
+      // TODO:
       return
     }
 
@@ -631,6 +631,16 @@ export class PuppetIosbird extends Puppet {
     contactId : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'roomDel(%s, %s)', roomId, contactId)
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+
+    const memberIdList = await this.roomMemberList(roomId)
+    if (memberIdList.includes(contactId)) {
+      await this.iosbirdManager.deleteChatRoomMember(roomId, contactId)
+    } else {
+      log.warn('PuppetPadchat', 'roomDel() room(%s) has no member contact(%s)', roomId, contactId)
+    }
   }
 
   public async roomAvatar (roomId: string): Promise<FileBox> {

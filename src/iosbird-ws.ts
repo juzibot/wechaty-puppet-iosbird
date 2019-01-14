@@ -14,13 +14,14 @@ import {
 const uuid = require('uuidv4')
 
 export enum Action {
-  ENTER             = 'enter',             // 与插件连接成功
-  CHAT              = 'chat',              // 收发消息
-  ANNOUNCEMENT      = 'announcement',      // 发送群公告
-  GAIN_CONTACT_LIST = 'gain_user_list',    // 请求联系人信息列表
-  CONTACT_LIST      = 'user_list',         // 收到联系人信息列表
-  AVATAR_LIST       = 'avatar_list',       // 群头像
-  ROOM_MEMBER_LIST  = 'group_user_list',   // 获取群成员信息列表
+  ENTER              = 'enter',             // 与插件连接成功
+  CHAT               = 'chat',              // 收发消息
+  ANNOUNCEMENT       = 'announcement',      // 发送群公告
+  GAIN_CONTACT_LIST  = 'gain_user_list',    // 请求联系人信息列表
+  CONTACT_LIST       = 'user_list',         // 收到联系人信息列表
+  AVATAR_LIST        = 'avatar_list',       // 群头像
+  ROOM_MEMBER_LIST   = 'group_user_list',   // 获取群成员信息列表
+  ROOM_MEMBER_REMOVE = 'del_group_mem',     // 删除群成员
 }
 
 export enum Type {
@@ -117,7 +118,8 @@ export class IosbirdWebSocket extends EventEmitter {
       const messagePayload = JSON.parse(message as string)
       if ( messagePayload.action === Action.CONTACT_LIST ||
            messagePayload.action === Action.AVATAR_LIST ||
-           messagePayload.action === Action.ROOM_MEMBER_LIST
+           messagePayload.action === Action.ROOM_MEMBER_LIST ||
+           messagePayload.action === Action.ROOM_MEMBER_REMOVE
           ) {
         return
       }
@@ -267,6 +269,56 @@ export class IosbirdWebSocket extends EventEmitter {
       if (messagePayload.action === Action.AVATAR_LIST) {
         this.emit('avatar', messagePayload as IosbirdAvatarSchema)
       }
+    })
+  }
+
+  public async deleteChatRoomMember (roomId: string, contactId: string): Promise<void | Error> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id    : '1',
+      type  : Type.WEB,
+      action: Action.ROOM_MEMBER_REMOVE,
+      botId : this.botId,
+      u_id: roomId,
+      wxids: `${this.botId}\$${contactId}`
+    }
+    this.ws.send(JSON.stringify(options))
+
+    /**
+     * 删除失败
+     * {
+     *   "status": 10001,
+     *   "id": "wxid_tdax1huk5hgs12",
+     *   "u_id": "5212109738@chatroom",
+     *   "message": "操作失败,请确保自己有权限进行此操作",
+     *   "type": "ios",
+     *   "action": "del_group_mem"
+     * }
+     *
+     * 删除成功
+     * {
+     *   "status": 10000,
+     *   "id": "wxid_tdax1huk5hgs12",
+     *   "u_id": "5212109738@chatroom",
+     *   "message": "success",
+     *   "type": "ios",
+     *   "action": "del_group_mem"
+     * }
+     */
+    return new Promise<void> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_MEMBER_REMOVE) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
     })
   }
 }
