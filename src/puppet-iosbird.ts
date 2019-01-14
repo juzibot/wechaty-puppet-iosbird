@@ -625,7 +625,6 @@ export class PuppetIosbird extends Puppet {
     return roomIdList
   }
 
-  // TODO:
   public async roomDel (
     roomId    : string,
     contactId : string,
@@ -661,6 +660,12 @@ export class PuppetIosbird extends Puppet {
     contactId : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'roomAdd(%s, %s)', roomId, contactId)
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+
+    log.verbose('PuppetPadchat', 'roomAdd(%s, %s) try to Add', roomId, contactId)
+    await this.iosbirdManager.addChatRoomMember(roomId, contactId)
   }
 
   public async roomTopic (roomId: string)                : Promise<string>

@@ -27,7 +27,7 @@ export class IosbirdManager extends IosbirdWebSocket {
         await this.syncContactsAndRooms()
         await this.syncAllRoomMember()
         // sync avatar of contact
-        await this.syncAvatarAsync()
+        // await this.syncAvatarAsync()
         this.emit('login', botId)
       })
       await super.initWebSocket()
@@ -325,6 +325,15 @@ export class IosbirdManager extends IosbirdWebSocket {
       await super.deleteChatRoomMember(roomId, contactId)
     } catch(err) {
       log.error('IosbirdManager', 'deleteChatRoomMember() error: %s', err)
+    }
+  }
+
+  public async addChatRoomMember (roomId: string, contactId: string): Promise<void> {
+    log.verbose('IosbirdManager', 'addChatRoomMember(%s, %s)', roomId, contactId)
+    try {
+      await super.addChatRoomMember(roomId, contactId)
+    } catch(err) {
+      throw new Error(err)
     }
   }
 }

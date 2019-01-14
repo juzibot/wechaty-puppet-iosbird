@@ -22,6 +22,7 @@ export enum Action {
   AVATAR_LIST        = 'avatar_list',       // 群头像
   ROOM_MEMBER_LIST   = 'group_user_list',   // 获取群成员信息列表
   ROOM_MEMBER_REMOVE = 'del_group_mem',     // 删除群成员
+  ROOM_MEMBER_ADD    = 'add_group_mem',     //添加群成员
 }
 
 export enum Type {
@@ -119,7 +120,8 @@ export class IosbirdWebSocket extends EventEmitter {
       if ( messagePayload.action === Action.CONTACT_LIST ||
            messagePayload.action === Action.AVATAR_LIST ||
            messagePayload.action === Action.ROOM_MEMBER_LIST ||
-           messagePayload.action === Action.ROOM_MEMBER_REMOVE
+           messagePayload.action === Action.ROOM_MEMBER_REMOVE ||
+           messagePayload.action === Action.ROOM_MEMBER_ADD
           ) {
         return
       }
@@ -312,6 +314,34 @@ export class IosbirdWebSocket extends EventEmitter {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
         if (messagePayload.action === Action.ROOM_MEMBER_REMOVE) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
+    })
+  }
+
+  public async addChatRoomMember (roomId: string, contactId: string): Promise<void | Error> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id    : '1',
+      type  : Type.WEB,
+      action: Action.ROOM_MEMBER_ADD,
+      botId : this.botId,
+      u_id: roomId,
+      wxids: `${this.botId}\$${contactId}`
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<void> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_MEMBER_ADD) {
           if (messagePayload.status === 10000) {
             resolve()
           } else if (messagePayload.status === 10001) {
