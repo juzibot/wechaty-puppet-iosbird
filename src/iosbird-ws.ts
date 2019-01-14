@@ -14,15 +14,21 @@ import {
 const uuid = require('uuidv4')
 
 export enum Action {
-  ENTER              = 'enter',             // 与插件连接成功
-  CHAT               = 'chat',              // 收发消息
-  ANNOUNCEMENT       = 'announcement',      // 发送群公告
-  GAIN_CONTACT_LIST  = 'gain_user_list',    // 请求联系人信息列表
-  CONTACT_LIST       = 'user_list',         // 收到联系人信息列表
-  AVATAR_LIST        = 'avatar_list',       // 群头像
-  ROOM_MEMBER_LIST   = 'group_user_list',   // 获取群成员信息列表
-  ROOM_MEMBER_REMOVE = 'del_group_mem',     // 删除群成员
-  ROOM_MEMBER_ADD    = 'add_group_mem',     //添加群成员
+  ENTER                = 'enter',             // 与插件连接成功
+  CHAT                 = 'chat',              // 收发消息
+  ANNOUNCEMENT         = 'announcement',      // 发送群公告
+  GAIN_CONTACT_LIST    = 'gain_user_list',    // 请求联系人信息列表
+  CONTACT_LIST         = 'user_list',         // 收到联系人信息列表
+  CONTACT_ALIAS_MODIFY = 'change_nickname',   // 修改昵称
+  AVATAR_LIST          = 'avatar_list',       // 群头像
+  ROOM_MEMBER_LIST     = 'group_user_list',   // 获取群成员信息列表
+  ROOM_MEMBER_REMOVE   = 'del_group_mem',     // 删除群成员
+  ROOM_MEMBER_ADD      = 'add_group_mem',     // 添加群成员
+  ROOM_CREATE          = 'create_group',      // 新建群
+  ROOM_TOPIC_MODIFY    = 'modify_name',       // 修改群名称
+  ROOM_QRCODE          = 'http_get_qrcode',   // 获取群二维码
+  ROOM_CREATE_RES      = 'add_users_res',     // 创建群返回值
+
 }
 
 export enum Type {
@@ -121,7 +127,11 @@ export class IosbirdWebSocket extends EventEmitter {
            messagePayload.action === Action.AVATAR_LIST ||
            messagePayload.action === Action.ROOM_MEMBER_LIST ||
            messagePayload.action === Action.ROOM_MEMBER_REMOVE ||
-           messagePayload.action === Action.ROOM_MEMBER_ADD
+           messagePayload.action === Action.ROOM_MEMBER_ADD ||
+           messagePayload.action === Action.CONTACT_ALIAS_MODIFY ||
+           messagePayload.action === Action.ROOM_TOPIC_MODIFY ||
+           messagePayload.action === Action.ROOM_QRCODE ||
+           messagePayload.action === Action.ROOM_CREATE_RES
           ) {
         return
       }
@@ -344,6 +354,162 @@ export class IosbirdWebSocket extends EventEmitter {
         if (messagePayload.action === Action.ROOM_MEMBER_ADD) {
           if (messagePayload.status === 10000) {
             resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
+    })
+  }
+
+  public async modifyRoomTopic(roomId: string, topic: string): Promise<void> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id      : '1',
+      type    : Type.WEB,
+      action  : Action.ROOM_TOPIC_MODIFY,
+      botId   : this.botId,
+      u_id    : roomId,
+      new_name: topic,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<void> ((resolve, reject) => {
+      /**
+       * { action: 'modify_name',
+       *  status: 10000,
+       *  id: 'wxid_tdax1huk5hgs12',
+       *  u_id: '11833181328@chatroom',
+       *  msg: 'success',
+       *  new_name: '修改群名',
+       *  type: 'ios'
+       * }
+       */
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_TOPIC_MODIFY) {
+          console.log('modifyRoomTopic:##########################################')
+          console.log(messagePayload)
+          console.log('##########################################')
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
+    })
+  }
+
+  public async createRoom(contactIds: string[]): Promise<void> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id    : '1',
+      type  : Type.WEB,
+      action: Action.ROOM_CREATE,
+      botId : this.botId,
+      wxids : contactIds.join(','),
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<void> ((resolve) => {
+      /**
+       * {
+       *   "id": "wxid_tdax1huk5hgs12",
+       *   "list": [
+       *     {
+       *       "id": "wxid_tdax1huk5hgs12$11833181328@chatroom",
+       *       "img": "",
+       *       "nick": "wuli舞哩客服,桔小秘,林贻民",
+       *       "type": "ios",
+       *       "c_type": "1"
+       *     }
+       *   ],
+       *   "type": "ios",
+       *   "action": "add_users_res"
+       * }
+       */
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_CREATE_RES) {
+          console.log('createRoom:##########################################')
+          console.log(messagePayload)
+          console.log('##########################################')
+          const roomId = messagePayload.list[0].id.split('$')[1]
+          resolve(roomId)
+        }
+      })
+    })
+  }
+
+  // TODO: Need to fix
+  public async modifyContactAlias(alias: string): Promise<void> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id      : '1',
+      type    : Type.WEB,
+      action  : Action.CONTACT_ALIAS_MODIFY,
+      botId   : this.botId,
+      nickname: alias,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<void> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.CONTACT_ALIAS_MODIFY) {
+          console.log('modifyContactAlias:##########################################')
+          console.log(messagePayload)
+          console.log('##########################################')
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
+    })
+  }
+
+  public roomQrcode(roomId: string): Promise<string> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id     : '1',
+      type   : Type.WEB,
+      action : Action.ROOM_QRCODE,
+      botId  : this.botId,
+      uniq_id: uuid(),
+      u_id   : roomId,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<string> ((resolve, reject) => {
+      /**
+       * { action: 'http_get_qrcode',
+       *   status: 10000,
+       *   uniq_id: 'cfc4476b-2edf-4a40-b17a-ff60d5a2ea9b',
+       *   id: 'wxid_tdax1huk5hgs12',
+       *   msg: 'success',
+       *   type: 'ios',
+       *   group_qrcode: 'http://useoss.51talk.com/images/1183318132.png'
+       * }
+       */
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ROOM_QRCODE) {
+          console.log('roomQrcode:##########################################')
+          console.log(messagePayload)
+          console.log('##########################################')
+          if (messagePayload.status === 10000) {
+            resolve(messagePayload.group_qrcode)
           } else if (messagePayload.status === 10001) {
             reject(messagePayload.message)
           }

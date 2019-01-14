@@ -257,11 +257,16 @@ export class PuppetIosbird extends Puppet {
 
   public async contactSelfName (name: string): Promise<void> {
     log.verbose('PuppetIosbird', 'contactSelfName(%s)', name)
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+    await this.iosbirdManager.modifyContactAlias(name)
     return
   }
 
   public async contactSelfSignature (signature: string): Promise<void> {
     log.verbose('PuppetIosbird', 'contactSelfSignature(%s)', signature)
+
   }
 
   /**
@@ -682,6 +687,10 @@ export class PuppetIosbird extends Puppet {
       return payload.topic
     }
     // TODO: Set room topic
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+    await this.iosbirdManager.modifyRoomTopic(roomId, topic)
     return
   }
 
@@ -691,7 +700,11 @@ export class PuppetIosbird extends Puppet {
     topic         : string,
   ): Promise<string> {
     log.verbose('PuppetIosbird', 'roomCreate(%s, %s)', contactIdList, topic)
-
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+    await this.iosbirdManager.createRoom(contactIdList)
+    // TODO: Add modify topic
     return 'iosbird_room_id'
   }
 
@@ -702,7 +715,11 @@ export class PuppetIosbird extends Puppet {
 
   // TODO:
   public async roomQrcode (roomId: string): Promise<string> {
-    return roomId + ' iosbird qrcode'
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+    const qrcode = await this.iosbirdManager.roomQrcode(roomId)
+    return qrcode
   }
 
   public async roomMemberList (roomId: string) : Promise<string[]> {
