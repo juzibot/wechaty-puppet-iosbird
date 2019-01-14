@@ -72,6 +72,20 @@ bot
     console.log('members length: ' + members.length)
     console.log('Room members:*************************************')
     console.log((await room.topic()))
+    if (content === 'remove') {
+      // remove contact from room
+      const contactRemove = await bot.Contact.find({name: '桔小秘'})
+      try {
+        if (contactRemove) {
+          console.log(contactRemove)
+          await room.del(contactRemove)
+        } else {
+          console.log('name of 桔小秘 is not exists')
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
   }
 
 })
