@@ -390,9 +390,6 @@ export class IosbirdWebSocket extends EventEmitter {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
         if (messagePayload.action === Action.ROOM_TOPIC_MODIFY) {
-          console.log('modifyRoomTopic:##########################################')
-          console.log(messagePayload)
-          console.log('##########################################')
           if (messagePayload.status === 10000) {
             resolve()
           } else if (messagePayload.status === 10001) {
@@ -403,7 +400,7 @@ export class IosbirdWebSocket extends EventEmitter {
     })
   }
 
-  public async createRoom(contactIds: string[]): Promise<void> {
+  public async createRoom(contactIds: string[]): Promise<string> {
     if (!this.ws) {
       throw new Error('WS is not connected')
     }
@@ -416,7 +413,7 @@ export class IosbirdWebSocket extends EventEmitter {
       wxids : contactIds.join(','),
     }
     this.ws.send(JSON.stringify(options))
-    return new Promise<void> ((resolve) => {
+    return new Promise<string> ((resolve) => {
       /**
        * {
        *   "id": "wxid_tdax1huk5hgs12",
@@ -436,9 +433,6 @@ export class IosbirdWebSocket extends EventEmitter {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
         if (messagePayload.action === Action.ROOM_CREATE_RES) {
-          console.log('createRoom:##########################################')
-          console.log(messagePayload)
-          console.log('##########################################')
           const roomId = messagePayload.list[0].id.split('$')[1]
           resolve(roomId)
         }
@@ -505,9 +499,6 @@ export class IosbirdWebSocket extends EventEmitter {
       this.ws!.on('message', (message) => {
         const messagePayload = JSON.parse(message as string)
         if (messagePayload.action === Action.ROOM_QRCODE) {
-          console.log('roomQrcode:##########################################')
-          console.log(messagePayload)
-          console.log('##########################################')
           if (messagePayload.status === 10000) {
             resolve(messagePayload.group_qrcode)
           } else if (messagePayload.status === 10001) {
