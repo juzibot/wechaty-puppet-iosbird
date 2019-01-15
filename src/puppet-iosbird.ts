@@ -659,7 +659,6 @@ export class PuppetIosbird extends Puppet {
     return qrCodeForChatie()
   }
 
-  // TODO:
   public async roomAdd (
     roomId    : string,
     contactId : string,
@@ -757,9 +756,15 @@ export class PuppetIosbird extends Puppet {
 
   public async roomAnnounce (roomId: string, text?: string) : Promise<void | string> {
     if (text) {
+      log.info('PuppetIosbird', 'roomAnnounce(%s, %s)', roomId, text)
+      if (!this.iosbirdManager) {
+        throw new Error('no padchat manager')
+      }
+      await this.iosbirdManager.setAnnouncement(roomId, text)
       return
     }
-
+    log.info('PuppetIosbird', 'roomAnnounce(%s)', roomId)
+    // TODO: return annoucement
     return 'iosbird announcement for ' + roomId
   }
 

@@ -131,7 +131,8 @@ export class IosbirdWebSocket extends EventEmitter {
            messagePayload.action === Action.CONTACT_ALIAS_MODIFY ||
            messagePayload.action === Action.ROOM_TOPIC_MODIFY ||
            messagePayload.action === Action.ROOM_QRCODE ||
-           messagePayload.action === Action.ROOM_CREATE_RES
+           messagePayload.action === Action.ROOM_CREATE_RES ||
+           messagePayload.action === Action.ANNOUNCEMENT
           ) {
         return
       }
@@ -393,7 +394,7 @@ export class IosbirdWebSocket extends EventEmitter {
           if (messagePayload.status === 10000) {
             resolve()
           } else if (messagePayload.status === 10001) {
-            reject(messagePayload.message)
+            reject(messagePayload.msg)
           }
         }
       })
@@ -502,10 +503,61 @@ export class IosbirdWebSocket extends EventEmitter {
           if (messagePayload.status === 10000) {
             resolve(messagePayload.group_qrcode)
           } else if (messagePayload.status === 10001) {
-            reject(messagePayload.message)
+            reject(messagePayload.msg)
           }
         }
       })
     })
   }
+
+  public setAnnouncement(roomId: string, content: string): Promise<string> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id     : '123',
+      type   : Type.WEB,
+      action : Action.ANNOUNCEMENT,
+      botId  : this.botId,
+      u_id   : roomId,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<string> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+        /**
+         * 修改成功
+         * {
+         *   "action": "announcement",
+         *   "status": 10000,
+         *   "id": "wxid_tdax1huk5hgs12",
+         *   "cb": "",
+         *   "u_id": "9659181410@chatroom",
+         *   "msg": "success",
+         *   "type": "ios"
+         * }
+         *
+         * 修改失败
+         * {
+         *   "action": "announcement",
+         *   "status": 10001,
+         *   "id": "wxid_tdax1huk5hgs12",
+         *   "cb": "",
+         *   "u_id": "5212109738@chatroom",
+         *   "msg": "操作失败,只有群主可以发公告",
+         *   "type": "ios"
+         * }
+         */
+        const messagePayload = JSON.parse(message as string)
+        if (messagePayload.action === Action.ANNOUNCEMENT) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.msg)
+          }
+        }
+      })
+    })
+  }
+
 }

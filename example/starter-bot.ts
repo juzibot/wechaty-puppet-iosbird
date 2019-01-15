@@ -17,6 +17,7 @@ bot
     await contactSelf.name('wuli舞哩客服')
   }
 
+
   /**
    * Message
    */
@@ -129,6 +130,13 @@ bot
       } catch (err) {
         console.log(err)
       }
+    }
+
+    /**
+     * 发布群公告
+     */
+    if (content === '发布群公告') {
+      await room.announce('@所有人 今天天气很好')
     }
   }
 
