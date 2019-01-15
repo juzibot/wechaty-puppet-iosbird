@@ -803,8 +803,13 @@ export class PuppetIosbird extends Puppet {
     hello     : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'friendshipAdd(%s, %s)', contactId, hello)
+    if (!this.iosbirdManager) {
+      throw new Error('no padchat manager')
+    }
+    await this.iosbirdManager.friendshipAdd(contactId, hello)
   }
 
+  // TODO:
   public async friendshipAccept (
     friendshipId : string,
   ): Promise<void> {

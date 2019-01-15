@@ -14,20 +14,22 @@ import {
 const uuid = require('uuidv4')
 
 export enum Action {
-  ENTER                = 'enter',             // 与插件连接成功
-  CHAT                 = 'chat',              // 收发消息
-  ANNOUNCEMENT         = 'announcement',      // 发送群公告
-  GAIN_CONTACT_LIST    = 'gain_user_list',    // 请求联系人信息列表
-  CONTACT_LIST         = 'user_list',         // 收到联系人信息列表
-  CONTACT_ALIAS_MODIFY = 'change_nickname',   // 修改昵称
-  AVATAR_LIST          = 'avatar_list',       // 群头像
-  ROOM_MEMBER_LIST     = 'group_user_list',   // 获取群成员信息列表
-  ROOM_MEMBER_REMOVE   = 'del_group_mem',     // 删除群成员
-  ROOM_MEMBER_ADD      = 'add_group_mem',     // 添加群成员
-  ROOM_CREATE          = 'create_group',      // 新建群
-  ROOM_TOPIC_MODIFY    = 'modify_name',       // 修改群名称
-  ROOM_QRCODE          = 'http_get_qrcode',   // 获取群二维码
-  ROOM_CREATE_RES      = 'add_users_res',     // 创建群返回值
+  ENTER                = 'enter',                   // 与插件连接成功
+  CHAT                 = 'chat',                    // 收发消息
+  ANNOUNCEMENT         = 'announcement',            // 发送群公告
+  GAIN_CONTACT_LIST    = 'gain_user_list',          // 请求联系人信息列表
+  CONTACT_LIST         = 'user_list',               // 收到联系人信息列表
+  CONTACT_ALIAS_MODIFY = 'change_nickname',         // 修改昵称
+  AVATAR_LIST          = 'avatar_list',             // 群头像
+  ROOM_MEMBER_LIST     = 'group_user_list',         // 获取群成员信息列表
+  ROOM_MEMBER_REMOVE   = 'del_group_mem',           // 删除群成员
+  ROOM_MEMBER_ADD      = 'add_group_mem',           // 添加群成员
+  ROOM_CREATE          = 'create_group',            // 新建群
+  ROOM_TOPIC_MODIFY    = 'modify_name',             // 修改群名称
+  ROOM_QRCODE          = 'http_get_qrcode',         // 获取群二维码
+  ROOM_CREATE_RES      = 'add_users_res',           // 创建群返回值
+  FRIENDSHIP_ADD       = 'add_friend',              // 添加好友
+  FRIENDSHIP_ACCEPT    = 'accept_friend_request',   // 接受好友请求
 
 }
 
@@ -472,7 +474,7 @@ export class IosbirdWebSocket extends EventEmitter {
     })
   }
 
-  public roomQrcode(roomId: string): Promise<string> {
+  public async roomQrcode(roomId: string): Promise<string> {
     if (!this.ws) {
       throw new Error('WS is not connected')
     }
@@ -510,7 +512,7 @@ export class IosbirdWebSocket extends EventEmitter {
     })
   }
 
-  public setAnnouncement(roomId: string, content: string): Promise<string> {
+  public async setAnnouncement(roomId: string, content: string): Promise<string> {
     if (!this.ws) {
       throw new Error('WS is not connected')
     }
@@ -560,4 +562,80 @@ export class IosbirdWebSocket extends EventEmitter {
     })
   }
 
+  public async friendshipAdd(contactId: string, hello: string): Promise<string> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id        : '1',
+      uniq_id   : uuid(),
+      type      : Type.WEB,
+      action    : Action.FRIENDSHIP_ADD,
+      botId     : this.botId,
+      wxid      : contactId,
+      verify_msg: hello,
+      remark    : 'remark name',
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<string> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+        const messagePayload = JSON.parse(message as string)
+        /**
+         * 添加好友失败
+         * {
+         *   "action": "add_friend",
+         *   "status": 10001,
+         *   "wxid": "",
+         *   "id": "wxid_tdax1huk5hgs12",
+         *   "uniq_id": "bc2d39d7-a3d1-4334-807b-27deeac83744",
+         *   "message": "添加学员为好友时，未知页面",
+         *   "type": "ios"
+         * }
+         */
+        console.log('friendshipAdd:##########################################')
+        console.log(messagePayload)
+        console.log('friendshipAdd:##########################################')
+        if (messagePayload.action === Action.FRIENDSHIP_ADD) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.message)
+          }
+        }
+      })
+    })
+  }
+
+
+  public async friendshipAccept(contactId: string, hello: string): Promise<string> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      id        : '1',
+      uniq_id   : uuid(),
+      type      : Type.WEB,
+      action    : Action.FRIENDSHIP_ACCEPT,
+      botId     : this.botId,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<string> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+
+        const messagePayload = JSON.parse(message as string)
+        console.log('friendshipAccept:##########################################')
+        console.log(messagePayload)
+        console.log('friendshipAccept:##########################################')
+        if (messagePayload.action === Action.FRIENDSHIP_ACCEPT) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.msg)
+          }
+        }
+      })
+    })
+  }
 }

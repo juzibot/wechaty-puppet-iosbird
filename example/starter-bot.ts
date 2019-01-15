@@ -1,5 +1,5 @@
 import { PuppetIosbird } from '../src/puppet-iosbird'
-import { Wechaty, Message, Contact, Room    } from '../wechaty/src'
+import { Wechaty, Message, Contact, Room, Friendship    } from '../wechaty/src'
 import { MessageType } from '../wechaty-puppet/src';
 
 const puppet  = new PuppetIosbird()
@@ -118,7 +118,7 @@ bot
     /**
      * add contact to room
      */
-    if (content === 'add') {
+    if (content === '添加群成员') {
       const contactAdd = await bot.Contact.find({name: '桔小秘'})
       try {
         if (contactAdd) {
@@ -136,7 +136,18 @@ bot
      * 发布群公告
      */
     if (content === '发布群公告') {
-      await room.announce('@所有人 今天天气很好')
+      await room.announce('今天天气很好')
+    }
+
+    /**
+     * 添加好友
+     */
+    if (content === '添加好友') {
+      for (const member of members) {
+        if (member.name() === '多米') {
+          await bot.Friendship.add(member, 'hahahahaha')
+        }
+      }
     }
   }
 
