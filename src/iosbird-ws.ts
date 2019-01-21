@@ -28,6 +28,7 @@ export enum Action {
   ROOM_TOPIC_MODIFY    = 'modify_name',             // 修改群名称
   ROOM_QRCODE          = 'http_get_qrcode',         // 获取群二维码
   ROOM_CREATE_RES      = 'add_users_res',           // 创建群返回值
+  ROOM_QUIT            = 'quit_chatroom',           // 退出群聊
   FRIENDSHIP_ADD       = 'add_friend',              // 添加好友
   FRIENDSHIP_ACCEPT    = 'accept_friend_request',   // 接受好友请求
 
@@ -134,7 +135,8 @@ export class IosbirdWebSocket extends EventEmitter {
            messagePayload.action === Action.ROOM_TOPIC_MODIFY ||
            messagePayload.action === Action.ROOM_QRCODE ||
            messagePayload.action === Action.ROOM_CREATE_RES ||
-           messagePayload.action === Action.ANNOUNCEMENT
+           messagePayload.action === Action.ANNOUNCEMENT ||
+           messagePayload.action === Action.ROOM_QUIT
           ) {
         return
       }
@@ -629,6 +631,36 @@ export class IosbirdWebSocket extends EventEmitter {
         console.log(messagePayload)
         console.log('friendshipAccept:##########################################')
         if (messagePayload.action === Action.FRIENDSHIP_ACCEPT) {
+          if (messagePayload.status === 10000) {
+            resolve()
+          } else if (messagePayload.status === 10001) {
+            reject(messagePayload.msg)
+          }
+        }
+      })
+    })
+  }
+
+  public async roomQuit(roomId: string): Promise<void> {
+    if (!this.ws) {
+      throw new Error('WS is not connected')
+    }
+    // Get contact List
+    const options = {
+      type  : Type.WEB,
+      action: Action.ROOM_QUIT,
+      botId : this.botId,
+      u_id  : roomId,
+    }
+    this.ws.send(JSON.stringify(options))
+    return new Promise<void> ((resolve, reject) => {
+      this.ws!.on('message', (message) => {
+
+        const messagePayload = JSON.parse(message as string)
+        console.log('roomQuit:##########################################')
+        console.log(messagePayload)
+        console.log('roomQuit:##########################################')
+        if (messagePayload.action === Action.ROOM_QUIT) {
           if (messagePayload.status === 10000) {
             resolve()
           } else if (messagePayload.status === 10001) {
