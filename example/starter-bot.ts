@@ -101,7 +101,7 @@ bot
     /**
      * remove contact from room
      */
-    if (content === 'remove') {
+    if (content === '移除群成员') {
       const contactRemove = await bot.Contact.find({name: '桔小秘'})
       try {
         if (contactRemove) {
@@ -148,6 +148,10 @@ bot
           await bot.Friendship.add(member, 'hahahahaha')
         }
       }
+    }
+
+    if (content === '退出群聊') {
+      await room.quit()
     }
   }
 
