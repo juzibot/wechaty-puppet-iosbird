@@ -349,10 +349,11 @@ export class PuppetIosbird extends Puppet {
 
   public async contactRawPayloadParser (rawPayload: IosbirdContactPayload): Promise<ContactPayload> {
     log.verbose('PuppetIosbird', 'contactRawPayloadParser(%s)', rawPayload)
+    const contactId = rawPayload.id.split('$')[1]
     const payload: ContactPayload = {
       avatar: rawPayload.avatar || 'http://www.botorange.com',
       gender: ContactGender.Unknown,
-      id    : rawPayload.id,
+      id    : contactId,
       name  : rawPayload.name!,
       type  : ContactType.Unknown,
       alias : rawPayload.nick,
@@ -611,9 +612,10 @@ export class PuppetIosbird extends Puppet {
     rawPayload: IosbirdContactPayload,
   ): Promise<RoomPayload> {
     log.verbose('PuppetIosbird', 'roomRawPayloadParser(%s)', rawPayload)
-    const memberIdList = await this.roomMemberList(rawPayload.id)
+    const roomId = rawPayload.id.split('$')[1]
+    const memberIdList = await this.roomMemberList(roomId)
     const payload: RoomPayload = {
-      id           : rawPayload.id,
+      id           : roomId,
       memberIdList : memberIdList,
       topic        : rawPayload.nick,
     }
@@ -708,6 +710,10 @@ export class PuppetIosbird extends Puppet {
   // TODO:
   public async roomQuit (roomId: string): Promise<void> {
     log.verbose('PuppetIosbird', 'roomQuit(%s)', roomId)
+    if (!this.iosbirdManager) {
+      throw new Error('no iosbird manager')
+    }
+    await this.iosbirdManager.roomQuit(roomId)
   }
 
   public async roomQrcode (roomId: string): Promise<string> {
@@ -741,7 +747,7 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async roomMemberRawPayloadParser (rawPayload: IosbirdRoomMemberPayload): Promise<RoomMemberPayload>  {
-    log.verbose('PuppetIosbird', 'roomMemberRawPayloadParser(%s)', rawPayload)
+    log.verbose('PuppetIosbird', 'roomMemberRawPayloadParser(%s)', JSON.stringify(rawPayload))
     return {
       avatar   : rawPayload.wechat_img,
       id       : rawPayload.wechat_id,
