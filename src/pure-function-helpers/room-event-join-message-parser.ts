@@ -103,7 +103,7 @@ export async function roomJoinEventMessageParser (
     return null
   }
 
-  let content = rawPayload.content.replace('\\', '')
+  let content = rawPayload.content.replace(/\\/g, '')
 
   let matchesForBotInviteOtherEn         = null as null | string[]
   let matchesForOtherInviteBotEn         = null as null | string[]

@@ -1,4 +1,5 @@
 export function splitChineseNameList (nameListText: string): string[] {
+  nameListText = nameListText.replace(/"/g, '')
   // 李卓桓、李佳芮、桔小秘
   return nameListText.split('、')
 }
