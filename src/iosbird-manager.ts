@@ -116,6 +116,7 @@ export class IosbirdManager extends IosbirdWebSocket {
   }
 
   public async contactRawPayload(id: string): Promise<IosbirdContactPayload> {
+    log.verbose('IosbirdManager', 'contactRawPayload(%s)', id)
     if (! this.cacheContactRawPayload) {
       throw new Error('cacheContactRawPayload is not exists')
     }
@@ -133,6 +134,7 @@ export class IosbirdManager extends IosbirdWebSocket {
   }
 
   public async roomRawPayload(id: string): Promise<IosbirdContactPayload> {
+    log.verbose('IosirdManager', 'roomRawPayload(%s)', id)
     if (! this.cacheRoomRawPayload) {
       throw new Error('cacheRoomRawPayload is not exists')
     }
@@ -159,6 +161,7 @@ export class IosbirdManager extends IosbirdWebSocket {
   }
 
   public async getRoomMemberIdList (roomId: string): Promise<string[]> {
+    log.verbose('IosbirdManager', 'getRoomMemberIdList(%s)', roomId)
     if (!this.cacheRoomMemberRawPayload) {
       throw new Error('cacheRoomMemberRawPayload is not init')
     }
@@ -197,12 +200,15 @@ export class IosbirdManager extends IosbirdWebSocket {
       }
     }
     if (isFriend) {
+      log.verbose('IosbirdManager', 'getContactLength(true)')
       return friendNumber
     }
+    log.verbose('IosbirdManager', 'getContactLength(false)')
     return (total - friendNumber)
   }
 
   public async roomMemberRawPayload(roomId: string): Promise<{ [contactId: string]: IosbirdRoomMemberPayload }> {
+    log.verbose('IosbirdManager', 'roomMemberRawPayload(%s)', roomId)
     if (!this.cacheRoomMemberRawPayload) {
       throw new Error('cacheRoomMemberRawPayload is not init')
     }
