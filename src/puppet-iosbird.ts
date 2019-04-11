@@ -68,10 +68,13 @@ import {
   IosbirdRoomMemberPayload,
   IosbirdMessageType
 }                                   from './iosbird-schema'
-import { IosbirdManager } from './iosbird-manager'
-import { linkMessageParser } from './pure-function-helpers/message-link-payload-parser'
-import { roomJoinEventMessageParser } from './pure-function-helpers/room-event-join-message-parser'
-import flatten  from 'array-flatten'
+import { IosbirdManager }           from './iosbird-manager'
+import { linkMessageParser }        from './pure-function-helpers/message-link-payload-parser'
+import {
+  roomJoinEventMessageParser,
+                                  } from './pure-function-helpers/room-event-join-message-parser'
+import flatten                      from 'array-flatten'
+import { fileMessageParser }        from './pure-function-helpers/message-file-payload-parser'
 
 
 export interface IosbirdRoomRawPayload {
@@ -367,17 +370,21 @@ export class PuppetIosbird extends Puppet {
    * Message
    *
    */
-  // TODO:
   public async messageFile (id: string): Promise<FileBox> {
-    return FileBox.fromBase64(
-      'cRH9qeL3XyVnaXJkppBuH20tf5JlcG9uFX1lL2IvdHRRRS9kMMQxOPLKNYIzQQ==',
-      'iosbird-file' + id + '.txt',
-    )
+    log.verbose('PuppetIosbird', 'messageUrl(%s)', id)
+    const rawPayload = await this.messageRawPayload(id)
+    const payload = await this.messagePayload(id)
+
+    if (payload.type !== MessageType.Attachment) {
+      throw new Error('Can not get url from non url payload')
+    } else {
+      const file = await fileMessageParser(rawPayload)
+      return FileBox.fromUrl(file.url, file.title)
+    }
   }
 
-  // TODO:
   public async messageUrl (messageId: string)  : Promise<UrlLinkPayload> {
-    log.verbose('PuppetIosbird', 'messageUrl(%s)')
+    log.verbose('PuppetIosbird', 'messageUrl(%s)', messageId)
     const rawPayload = await this.messageRawPayload(messageId)
     const payload = await this.messagePayload(messageId)
 
@@ -399,7 +406,7 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async messageRawPayloadParser (rawPayload: IosbirdMessagePayload): Promise<MessagePayload> {
-    log.verbose('PuppetIosbird', 'messagePayload(%s)', rawPayload)
+    log.verbose('PuppetIosbird', 'messagePayload(%s)', JSON.stringify(rawPayload, null, 2))
 
     const type = messageType(rawPayload.cnt_type)
     let payloadBase = {

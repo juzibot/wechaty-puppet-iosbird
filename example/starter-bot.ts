@@ -40,6 +40,19 @@ bot
       console.log('message type is Audio')
       break
     }
+    case MessageType.Url: {
+      const link = await message.toUrlLink()
+      console.log(link)
+      console.log('message type is Link')
+      break
+    }
+    case MessageType.Attachment: {
+      const file = await message.toFileBox()
+      const name = file.name
+      await file.toFile(name, true)
+      console.log('message type is attachment')
+      break
+    }
     default: {
       console.log('message type is Other')
       break
