@@ -1,11 +1,20 @@
-import { IosbirdWebSocket, Type, Action } from './iosbird-ws'
-import { FlashStoreSync } from 'flash-store'
-import { IosbirdContactPayload, IosbirdRoomMemberPayload, IosbirdAvatarSchema } from './iosbird-schema'
-import { log } from './config'
-import * as path from 'path'
-import os from 'os'
-import fs from 'fs-extra'
-import { memberToContact } from './pure-function-helpers/member-to-contact';
+import {
+  Type,
+  Action,
+  IosbirdWebSocket,
+                            } from './iosbird-ws'
+import { FlashStoreSync     } from 'flash-store'
+import {
+  IosbirdContactPayload,
+  IosbirdRoomMemberPayload,
+  IosbirdAvatarSchema,
+                            } from './iosbird-schema'
+import { log                } from './config'
+import * as path              from 'path'
+import os                     from 'os'
+import fs                     from 'fs-extra'
+import { memberToContact }    from './pure-function-helpers/member-to-contact';
+import { DedupeApi }          from './dedupe-api'
 export class IosbirdManager extends IosbirdWebSocket {
 
   private cacheContactRawPayload?     : FlashStoreSync<string, IosbirdContactPayload>
@@ -14,9 +23,11 @@ export class IosbirdManager extends IosbirdWebSocket {
     [contactId: string]: IosbirdRoomMemberPayload,
   }>
 
+  private dedudeApi: DedupeApi
+
   constructor(endpoint: string, botId: string) {
     super(endpoint, botId)
-
+    this.dedudeApi = new DedupeApi()
   }
 
   public async start(): Promise<void> {
@@ -24,9 +35,10 @@ export class IosbirdManager extends IosbirdWebSocket {
     await this.initCache(this.botId)
     return new Promise<void> (async (resolve, reject) => {
       this.on('connect', async (botId) => {
-        // await this.syncContactsAndRooms()
-        // await this.syncAllRoomMember()
+        await this.syncContactsAndRooms()
+        await this.syncAllRoomMember()
         // sync avatar of contact
+        await this.dedudeApi.dedupe(this.syncAvatarAsync, this)
         // await this.syncAvatarAsync()
         this.emit('login', botId)
       })
@@ -124,7 +136,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawContactPayload) {
       return rawContactPayload
     }
-    await this.syncContactsAndRooms()
+    this.dedudeApi.dedupe<IosbirdWebSocket, void>(this.syncContactsAndRooms, this)
+    // await this.syncContactsAndRooms()
     rawContactPayload = this.cacheContactRawPayload.get(id)
     if (rawContactPayload) {
       return rawContactPayload
@@ -142,7 +155,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawRoomPayload) {
       return rawRoomPayload
     }
-    await this.syncContactsAndRooms()
+    this.dedudeApi.dedupe<IosbirdWebSocket, void> (this.syncContactsAndRooms, this)
+    // await this.syncContactsAndRooms()
     rawRoomPayload = this.cacheRoomRawPayload.get(id)
     if (rawRoomPayload) {
       return rawRoomPayload
@@ -169,7 +183,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (memberListDic && Object.keys(memberListDic).length > 0) {
       return Object.keys(memberListDic)
     }
-    const roomMemberListDict = await this.syncRoomMembers(roomId)
+    const roomMemberListDict = await this.dedudeApi.dedupe(await this.syncRoomMembers, this, roomId)
+    // const roomMemberListDict = await this.syncRoomMembers(roomId)
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     return Object.keys(roomMemberListDict.roomMemberDict)
   }
@@ -215,7 +230,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (this.cacheRoomMemberRawPayload.has(roomId)) {
       return this.cacheRoomMemberRawPayload.get(roomId)!
     }
-    const roomMemberListDict = await this.syncRoomMembers(roomId)
+    // const roomMemberListDict = await this.syncRoomMembers(roomId)
+    const roomMemberListDict = await this.dedudeApi.dedupe(this.syncRoomMembers, this, roomId)
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     return roomMemberListDict.roomMemberDict
   }
@@ -225,7 +241,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     if ( (!this.cacheContactRawPayload) || (!this.cacheRoomRawPayload)) {
       throw new Error('cache is not exists')
     }
-    const roomAndContactList = await this.syncContactAndRoom()
+    // const roomAndContactList = await this.syncContactAndRoom()
+    const roomAndContactList = await this.dedudeApi.dedupe(this.syncContactAndRoom, this)
     roomAndContactList.list.map((value) => {
       const id = value.id.split('$')[1]
       /**
@@ -255,7 +272,8 @@ export class IosbirdManager extends IosbirdWebSocket {
     }
     const roomList = await this.getRoomIdList()
     for (const roomId of roomList) {
-      const roomMemberListDict = await this.syncRoomMembers(roomId)
+      // const roomMemberListDict = await this.syncRoomMembers(roomId)
+      const roomMemberListDict = await this.dedudeApi.dedupe(this.syncRoomMembers, this, roomId)
       this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
       const contactIds = Object.keys(roomMemberListDict.roomMemberDict)
       for (const contactId of contactIds) {
