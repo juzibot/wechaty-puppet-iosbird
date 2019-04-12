@@ -35,10 +35,10 @@ export class IosbirdManager extends IosbirdWebSocket {
     await this.initCache(this.botId)
     return new Promise<void> (async (resolve, reject) => {
       this.on('connect', async (botId) => {
-        await this.syncContactsAndRooms()
-        await this.syncAllRoomMember()
-        // sync avatar of contact
-        await this.dedudeApi.dedupe(this.syncAvatarAsync, this)
+        // await this.syncContactsAndRooms()
+        // await this.syncAllRoomMember()
+        // // sync avatar of contact
+        // await this.dedudeApi.dedupe(this.syncAvatarAsync, this)
         // await this.syncAvatarAsync()
         this.emit('login', botId)
       })

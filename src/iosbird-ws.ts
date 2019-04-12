@@ -31,6 +31,7 @@ export enum Action {
   ROOM_QUIT            = 'quit_chatroom',           // 退出群聊
   FRIENDSHIP_ADD       = 'add_friend',              // 添加好友
   FRIENDSHIP_ACCEPT    = 'accept_friend_request',   // 接受好友请求
+  HEARTBEAT            = 'heartbeat',               // 心跳信息(自己定义的, 不是IOS底层接口那边定义)
 
 }
 
@@ -76,6 +77,8 @@ export interface IosbirdIOSContactList {
 
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
+
+  private IosHeartbeatTimer: NodeJS.Timeout | null    = null
 
   constructor (
     protected endpoint: string,
@@ -138,6 +141,28 @@ export class IosbirdWebSocket extends EventEmitter {
            messagePayload.action === Action.ANNOUNCEMENT ||
            messagePayload.action === Action.ROOM_QUIT
           ) {
+        return
+      }
+
+      // 处理心跳信息
+      if (messagePayload.action === Action.HEARTBEAT) {
+        // 在线
+        if (messagePayload.content === 'online') {
+          if (this.IosHeartbeatTimer) {
+            clearInterval(this.IosHeartbeatTimer)
+            this.IosHeartbeatTimer = null
+          }
+          log.info ('IosbirdWebSocket', 'heartbeat info: ios plugin is working well!')
+        } else if (messagePayload.content === 'offline' || messagePayload.content === 'close') {
+          // 避免设置多个timer
+          if (this.IosHeartbeatTimer) {
+            return
+          }
+          this.IosHeartbeatTimer = setInterval (() => {
+            // TODO: 触发wechaty的error事件
+            log.error ('IosbirdWebSocket', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
+          }, 5 * 1000)
+        }
         return
       }
       messagePayload.msgId = uuid() as string
