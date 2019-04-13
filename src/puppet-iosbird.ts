@@ -301,7 +301,6 @@ export class PuppetIosbird extends Puppet {
     return contactIdList
   }
 
-  // TODO:
   public async contactQrcode (contactId: string): Promise<string> {
     if (contactId !== this.selfId()) {
       throw new Error('can not set avatar for others')
@@ -321,8 +320,7 @@ export class PuppetIosbird extends Puppet {
      * 1. set
      */
     if (file) {
-      // TODO:
-      return
+      throw new Error('not supported yet!')
     }
 
     /**
