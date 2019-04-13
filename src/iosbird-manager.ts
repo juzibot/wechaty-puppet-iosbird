@@ -136,7 +136,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawContactPayload) {
       return rawContactPayload
     }
-    this.dedudeApi.dedupe<IosbirdWebSocket, void>(this.syncContactsAndRooms, this)
+    await this.dedudeApi.dedupe<IosbirdWebSocket, void>(this.syncContactsAndRooms, this)
     // await this.syncContactsAndRooms()
     rawContactPayload = this.cacheContactRawPayload.get(id)
     if (rawContactPayload) {
@@ -155,7 +155,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (rawRoomPayload) {
       return rawRoomPayload
     }
-    this.dedudeApi.dedupe<IosbirdWebSocket, void> (this.syncContactsAndRooms, this)
+    await this.dedudeApi.dedupe<IosbirdWebSocket, void> (this.syncContactsAndRooms, this)
     // await this.syncContactsAndRooms()
     rawRoomPayload = this.cacheRoomRawPayload.get(id)
     if (rawRoomPayload) {

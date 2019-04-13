@@ -620,9 +620,6 @@ export class IosbirdWebSocket extends EventEmitter {
          *   "type": "ios"
          * }
          */
-        console.log('friendshipAdd:##########################################')
-        console.log(messagePayload)
-        console.log('friendshipAdd:##########################################')
         if (messagePayload.action === Action.FRIENDSHIP_ADD) {
           if (messagePayload.status === 10000) {
             resolve()
@@ -682,9 +679,6 @@ export class IosbirdWebSocket extends EventEmitter {
       this.ws!.on('message', (message) => {
 
         const messagePayload = JSON.parse(message as string)
-        console.log('roomQuit:##########################################')
-        console.log(messagePayload)
-        console.log('roomQuit:##########################################')
         if (messagePayload.action === Action.ROOM_QUIT) {
           if (messagePayload.status === 10000) {
             resolve()
