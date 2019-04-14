@@ -46,7 +46,7 @@ enum Heartbeat {
   close   = 'close',     // 关闭
 }
 
-interface RoomMemberDict {
+export interface RoomMemberDict {
   roomId: string,
   roomMemberDict: {
     [contactId: string]: IosbirdRoomMemberPayload
