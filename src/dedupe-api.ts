@@ -10,8 +10,8 @@ interface ApiCall {
   listener : PendingApiCall[]  // Promise的性质, 等待函数执行完并获得结果
 }
 
-// 由于获取微信号相关信息比较花费时间,所以需要的间隔稍微久一些(s)
-const EXPIRE_TIME = 2 * 60 * 1000
+// 为了避免
+const EXPIRE_TIME = 10 * 1000
 const PRE         = 'DedupeApi'
 
 /**
@@ -22,28 +22,36 @@ const PRE         = 'DedupeApi'
  * Only api calls in the DEDUPE_API list will be affected.
  */
 export class DedupeApi {
+
+  private static instance: DedupeApi
+
   private cache: {
     [key: string]: ApiCall
   }
 
   private cleaner: NodeJS.Timer
+
+  public static get Instance () {
+    return this.instance || (this.instance =  new DedupeApi())
+  }
   constructor () {
     this.cache = {}
     this.cleaner = setInterval(this.cleanData, EXPIRE_TIME)
   }
   public async dedupe<T, TResult>(func: (this: T, args?: any) => Promise<TResult>, thisArg: T, args?: any): Promise<TResult> {
-    log.silly (PRE, `dedupeApi(${func.name})`)
-    const existCall: ApiCall = this.cache[func.name]
+    const key = func.name + '_' + args
+    log.silly (PRE, `dedupeApi(${key})`)
+    const existCall: ApiCall = this.cache[key]
     const now: number         = new Date().getTime()
     // 之前访问过,并且没有过期
     if(existCall && now - existCall.timestamp < EXPIRE_TIME) {
       // 前一个访问已经访问完成
       if (existCall.returned) {
-        log.silly(PRE, `dedupeApi(${func.name}) dedeped api call with existing results.`)
+        log.silly(PRE, `dedupeApi(${key}) dedeped api call with existing results.`)
         return existCall.result
       } else {
         // 前一个访问正在访问, 使用Promise的特性,等待数据返回
-        log.silly(PRE, `dedepuApi(${func.name}) deduped api call with pending listeners.`)
+        log.silly(PRE, `dedepuApi(${key}) deduped api call with pending listeners.`)
         return new Promise<TResult>((resolve, reject)=> {
           existCall.listener.push({
             resolve,
@@ -53,9 +61,9 @@ export class DedupeApi {
       }
     } else {
       // 第一次访问
-      log.silly(PRE, `dedupedApi(${func.name}) deduped api call missed, call the external service.`)
+      log.silly(PRE, `dedupedApi(${key}) deduped api call missed, call the external service.`)
 
-      this.cache[func.name] = {
+      this.cache[key] = {
         listener : [],
         returned : false,
         timestamp: now,
@@ -66,18 +74,17 @@ export class DedupeApi {
         result = await func.call(thisArg, args)
       } catch (e) {
         // 访问失败, 调用Promise的reject返回
-        log.warn (PRE, `dedupeApi(${func.name}) failed from external service, reject ${this.cache[func.name].listener.length} deplicate api calls.`)
-        this.cache[func.name].listener.map(listener => {
+        log.warn (PRE, `dedupeApi(${key}) failed from external service, reject ${this.cache[key].listener.length} deplicate api calls.`)
+        this.cache[key].listener.map(listener => {
           listener.reject(e)
         })
         throw e
       }
-
       // 调用成功, 调用Promise的resolve返回
-      this.cache[func.name].result = result
-      this.cache[func.name].returned = true
-      log.silly(PRE, `depudeApi(${func.name}) got results from external service, resolve ${this.cache[func.name].listener.length} deplicate api calls.`)
-      this.cache[func.name].listener.map(listener => {
+      this.cache[key].result = result
+      this.cache[key].returned = true
+      log.silly(PRE, `depudeApi(${key}) got results from external service, resolve ${this.cache[key].listener.length} deplicate api calls.`)
+      this.cache[key].listener.map(listener => {
         listener.resolve(result)
       })
       return result
