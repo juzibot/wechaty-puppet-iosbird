@@ -112,6 +112,38 @@ export class IosbirdWebSocket extends EventEmitter {
     /**
      * Wait the Websocket to be connected
      */
+
+    /**
+     * 心跳信息检测不能放在'open'事件的callback中, 因为使用了open事件在Promise中,
+     * 如果心跳信息检测在open事件的callback中, 会一直在阻塞, 不会触发message事件,
+     * 不会有心跳信息, 所以会一直在显示check connection status
+     */
+
+    log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
+    const interval = setInterval(() => {
+      log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
+    }, 5 * 1000)
+
+    // 等待ios socket连接
+    this.on('heartbeat', (heartbeatInfo: Heartbeat) => {
+      if (heartbeatInfo === Heartbeat.online) {
+        if(!this.socketState) {
+          this.emit('connect', this.botId)
+          this.socketState = true
+          clearInterval(interval)
+        }
+      } else if (heartbeatInfo === Heartbeat.offline) {
+        this.emit('error', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
+      }
+    })
+
+    // 在指定时间内没有心跳信息
+    setTimeout (() => {
+      if (!this.iosHeartbeatTimer && (!this.socketState)) {
+        clearInterval(interval)
+        this.emit('error', 'not receive ios socket heartbeat information, may be ios plugin is broken, please check it out.')
+      }
+    }, 30 * 1000)
     await new Promise((resolve, reject) => {
       this.ws!.once('open', () => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(open)')
@@ -122,32 +154,7 @@ export class IosbirdWebSocket extends EventEmitter {
           type: Type.WEB,
         }
         this.ws!.send(JSON.stringify(msg))
-        log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
-        const interval = setInterval(() => {
-          log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
-        }, 2 * 1000)
-
-        // 等待ios socket连接
-        this.on('heartbeat', (heartbeatInfo: Heartbeat) => {
-          if (heartbeatInfo === Heartbeat.online) {
-            if(!this.socketState) {
-              this.emit('connect', this.botId)
-              this.socketState = true
-              clearInterval(interval)
-              return resolve()
-            }
-          } else if (heartbeatInfo === Heartbeat.offline) {
-            this.emit('error', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
-          }
-        })
-
-        // 在指定时间内没有心跳信息
-        setTimeout (() => {
-          if (!this.iosHeartbeatTimer && (!this.socketState)) {
-            clearInterval(interval)
-            this.emit('error', 'not receive ios socket heartbeat information, may be ios plugin is broken, please check it out.')
-          }
-        }, 30 * 1000)
+        resolve()
       })
       this.ws!.once('error', (error) => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(error) %s', error)
@@ -166,6 +173,7 @@ export class IosbirdWebSocket extends EventEmitter {
      */
     this.ws.on('message', (message) => {
       const messagePayload = JSON.parse(message as string)
+      // 过滤掉非消息内容, 只处理常规消息, 心跳信息及系统消息
       if ( messagePayload.action === Action.CONTACT_LIST ||
            messagePayload.action === Action.AVATAR_LIST ||
            messagePayload.action === Action.ROOM_MEMBER_LIST ||
@@ -237,6 +245,7 @@ export class IosbirdWebSocket extends EventEmitter {
       if ((! messagePayload.cnt_type) && (!messagePayload.m_type)) {
         messagePayload.cnt_type = IosbirdMessageType.TEXT
       }
+
       if (messagePayload.name === '系统消息'){
         messagePayload.cnt_type = IosbirdMessageType.SYS
       }
