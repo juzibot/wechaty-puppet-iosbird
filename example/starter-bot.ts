@@ -6,6 +6,9 @@ const puppet  = new PuppetIosbird()
 const bot = new Wechaty({ puppet })
 
 bot
+.on('error', (e) => {
+  console.log(e)
+})
 .on('login', (user) => console.log(`User ${user} logined`))
 .on('message', async (message) => {
 
