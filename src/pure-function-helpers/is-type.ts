@@ -11,3 +11,12 @@ export function isContactId (id?: string): boolean {
   }
   return !isRoomId(id)
 }
+
+export function isPayload (payload: object): boolean {
+  if (   payload
+      && Object.keys(payload).length > 0
+  ) {
+    return true
+  }
+  return false
+}
