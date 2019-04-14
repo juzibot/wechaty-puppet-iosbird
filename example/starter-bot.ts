@@ -178,6 +178,11 @@ bot
   console.log(`got new member ${nameList}`)
   console.log(`invited by ${inviter}`)
 })
+.on('room-topic', async (room, newTopic, oldTopic, changer) => {
+  console.log(`Room tpoic: ${await room.topic()}`)
+  console.log(`Room tpoic:  ${oldTopic} --> ${newTopic}`)
+  console.log(`changed by ${changer.name()}`)
+})
 .start()
 .catch(async (e) => {
   console.error('Bot start() fail:', e)

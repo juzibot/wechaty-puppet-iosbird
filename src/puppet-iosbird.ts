@@ -43,6 +43,7 @@ import {
 
   UrlLinkPayload,
   MessageType,
+  YOU,
 }                                   from '../wechaty-puppet/src'
 
 import {
@@ -75,6 +76,7 @@ import {
                                   } from './pure-function-helpers/room-event-join-message-parser'
 import flatten                      from 'array-flatten'
 import { fileMessageParser }        from './pure-function-helpers/message-file-payload-parser'
+import { roomTopicEventMessageParser } from './pure-function-helpers/room-event-topic-message-parser';
 
 
 export interface IosbirdRoomRawPayload {
@@ -198,7 +200,7 @@ export class PuppetIosbird extends Puppet {
           ////////////////////////////////////////////////
           this.onIosbirdMessageRoomEventJoin(rawPayload),
           // this.onPadchatMessageRoomEventLeave(rawPayload),
-          // this.onPadchatMessageRoomEventTopic(rawPayload),
+          this.onPadchatMessageRoomEventTopic(rawPayload),
         ])
         break
       case IosbirdMessageType.PICTURE:
@@ -244,6 +246,45 @@ export class PuppetIosbird extends Puppet {
       }
       const inviterId = inviterIdList[0]
       this.emit('room-join', roomId, inviteeIdList,  inviterId)
+    }
+  }
+
+  /**
+   * Look for room join event
+   */
+  protected async onPadchatMessageRoomEventTopic (rawPayload: IosbirdMessagePayload): Promise<void> {
+    log.verbose('PuppetIosbird', 'onIosbirdMessageRoomEventJoin({id=%s})', rawPayload.msgId)
+
+    const roomTopicEvent = roomTopicEventMessageParser(rawPayload)
+
+    if (roomTopicEvent) {
+      const changerName = roomTopicEvent.changerName
+      const newTopic    = roomTopicEvent.topic
+      const roomId      = roomTopicEvent.roomId
+      log.silly('PuppetIosbird', 'onIosbirdMessageRoomEventTopic() roomTopicEvent="%s"', JSON.stringify(roomTopicEvent))
+      // 查找旧群名
+      const roomOldPayload = await this.roomPayload(roomId)
+      const oldTopic       = roomOldPayload.topic
+
+      // 查找修改群名的成员
+      const changerIdList = await this.roomMemberSearch(roomId, changerName)
+      if (changerIdList.length < 1) {
+        throw new Error('no changerId found')
+      } else if (changerIdList.length > 1) {
+        log.warn('PuppetPadchat', 'onPadchatMessage() case PadchatMesssageSys: changerId found more than 1, use the first one.')
+      }
+      const changerId = changerIdList[0]
+
+      if (!this.iosbirdManager) {
+        throw new Error('no padchatManager')
+      }
+      /**
+       * Set Cache Dirty
+       */
+      // 需要重新加载群数据
+      await this.roomPayloadDirty(roomId)
+
+      this.emit('room-topic',  roomId, newTopic, oldTopic, changerId)
     }
   }
 
