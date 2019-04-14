@@ -40,6 +40,12 @@ export enum Type {
   IOS = 'ios',
 }
 
+enum Heartbeat {
+  online  = 'online',    // 在线
+  offline = 'offline',   // 掉线
+  close   = 'close',     // 关闭
+}
+
 interface RoomMemberDict {
   roomId: string,
   roomMemberDict: {
@@ -78,7 +84,14 @@ export interface IosbirdIOSContactList {
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
 
-  private IosHeartbeatTimer: NodeJS.Timeout | null    = null
+  // 断开心跳信息提醒间隔
+  private iosHeartbeatTimer: NodeJS.Timeout | null = null
+
+  //
+
+  // ios socket和puppet socket的连接状态
+  // 两个socket都连接成功 --> true, 否则 --> false
+  private socketState: boolean = false
 
   constructor (
     protected endpoint: string,
@@ -109,8 +122,32 @@ export class IosbirdWebSocket extends EventEmitter {
           type: Type.WEB,
         }
         this.ws!.send(JSON.stringify(msg))
-        this.emit('connect', this.botId)
-        return resolve()
+        log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
+        const interval = setInterval(() => {
+          log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
+        }, 2 * 1000)
+
+        // 等待ios socket连接
+        this.on('heartbeat', (heartbeatInfo: Heartbeat) => {
+          if (heartbeatInfo === Heartbeat.online) {
+            if(!this.socketState) {
+              this.emit('connect', this.botId)
+              this.socketState = true
+              clearInterval(interval)
+              return resolve()
+            }
+          } else if (heartbeatInfo === Heartbeat.offline) {
+            this.emit('error', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
+          }
+        })
+
+        // 在指定时间内没有心跳信息
+        setTimeout (() => {
+          if (!this.iosHeartbeatTimer && (!this.socketState)) {
+            clearInterval(interval)
+            this.emit('error', 'not receive ios socket heartbeat information, may be ios plugin is broken, please check it out.')
+          }
+        }, 30 * 1000)
       })
       this.ws!.once('error', (error) => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(error) %s', error)
@@ -148,18 +185,21 @@ export class IosbirdWebSocket extends EventEmitter {
       if (messagePayload.action === Action.HEARTBEAT) {
         // 在线
         if (messagePayload.content === 'online') {
-          if (this.IosHeartbeatTimer) {
-            clearInterval(this.IosHeartbeatTimer)
-            this.IosHeartbeatTimer = null
+          if (this.iosHeartbeatTimer) {
+            clearInterval(this.iosHeartbeatTimer)
+            this.iosHeartbeatTimer = null
           }
-          log.info ('IosbirdWebSocket', 'heartbeat info: ios plugin is working well!')
+          this.emit('heartbeat', Heartbeat.online)
+          log.silly ('IosbirdWebSocket', 'heartbeat info: ios plugin is working well!')
         } else if (messagePayload.content === 'offline' || messagePayload.content === 'close') {
+          if (messagePayload.content === 'offline') {
+            this.emit('heartbeat', Heartbeat.offline)
+          }
           // 避免设置多个timer
-          if (this.IosHeartbeatTimer) {
+          if (this.iosHeartbeatTimer) {
             return
           }
-          this.IosHeartbeatTimer = setInterval (() => {
-            // TODO: 触发wechaty的error事件
+          this.iosHeartbeatTimer = setInterval (() => {
             log.error ('IosbirdWebSocket', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
           }, 5 * 1000)
         }
