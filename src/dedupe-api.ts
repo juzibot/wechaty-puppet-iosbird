@@ -34,7 +34,7 @@ export class DedupeApi {
   public static get Instance () {
     return this.instance || (this.instance =  new DedupeApi())
   }
-  constructor () {
+  private constructor () {
     this.cache = {}
     this.cleaner = setInterval(this.cleanData, EXPIRE_TIME)
   }
