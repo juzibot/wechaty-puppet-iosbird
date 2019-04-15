@@ -750,7 +750,7 @@ export class PuppetIosbird extends Puppet {
     }
     const roomId = await this.iosbirdManager.createRoom(contactIdList)
     await this.iosbirdManager.modifyRoomTopic(roomId, topic)
-    return 'iosbird_room_id'
+    return roomId
   }
 
   // TODO:
