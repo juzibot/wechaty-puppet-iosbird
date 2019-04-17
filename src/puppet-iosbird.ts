@@ -230,6 +230,8 @@ export class PuppetIosbird extends Puppet {
        */
       await this.roomPayloadDirty(roomId)
       await this.roomMemberPayloadDirty(roomId)
+      // 重新从底层获取数据
+      await this.iosbirdManager.roomMemberRawPayload(roomId, true)
 
       const inviteeIdList = flatten<string>(
         await Promise.all(
@@ -240,6 +242,8 @@ export class PuppetIosbird extends Puppet {
       )
 
       const inviterIdList = await this.roomMemberSearch(roomId, inviterName)
+
+      log.silly('PuppetIosbird', `onIosbirdMessageRoomEventJoin() inviterIdList: ${inviteeIdList}` )
 
       if (inviterIdList.length < 1) {
         throw new Error('no inviterId found')
@@ -283,6 +287,7 @@ export class PuppetIosbird extends Puppet {
        */
       // 需要重新加载群数据
       await this.roomPayloadDirty(roomId)
+      await this.iosbirdManager.syncContactsAndRooms(true)
 
       this.emit('room-topic',  roomId, newTopic, oldTopic, changerId)
     }

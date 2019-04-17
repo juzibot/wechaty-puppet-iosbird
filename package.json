@@ -91,6 +91,7 @@
     "hot-import": "^0.2.1",
     "lru-cache": "^5.1.1",
     "normalize-package-data": "^2.4.0",
+    "p-queue": "^5.0.0",
     "portfinder": "^1.0.20",
     "promise-retry": "^1.1.1",
     "qr-image": "^3.2.0",

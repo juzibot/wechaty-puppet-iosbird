@@ -15,8 +15,9 @@ import { log                } from './config'
 import * as path              from 'path'
 import os                     from 'os'
 import fs                     from 'fs-extra'
-import { memberToContact }    from './pure-function-helpers/member-to-contact';
+import { memberToContact }    from './pure-function-helpers/member-to-contact'
 import { DedupeApi }          from './dedupe-api'
+import { queueApi }           from './queue-api'
 export class IosbirdManager extends IosbirdWebSocket {
 
   private cacheContactRawPayload?     : FlashStoreSync<string, IosbirdContactPayload>
@@ -37,11 +38,11 @@ export class IosbirdManager extends IosbirdWebSocket {
     await this.initCache(this.botId)
     return new Promise<void> (async (resolve, reject) => {
       this.on('connect', async (botId) => {
-        await this.syncContactsAndRooms()
+        // await this.syncContactsAndRooms()
         await this.syncAllRoomMember()
         // sync avatar of contact
-        await this.dedudeApi.dedupe(this.syncAvatarAsync, this)
-        await this.syncAvatarAsync()
+        // await this.dedudeApi.dedupe(this.syncAvatarAsync, this)
+        // await this.syncAvatarAsync()
         this.emit('login', botId)
       })
       await super.initWebSocket()
@@ -190,10 +191,9 @@ export class IosbirdManager extends IosbirdWebSocket {
     }
     let roomMemberListDict: RoomMemberDict
     if (!isForced) {
-      roomMemberListDict = await this.dedudeApi.dedupe(await this.syncRoomMembers, this, roomId)
+      roomMemberListDict = await this.dedudeApi.dedupe(this.syncRoomMembers, this, roomId)
     } else {
-      // TODO:
-      roomMemberListDict = {} as RoomMemberDict
+      roomMemberListDict = await queueApi.add(this.syncRoomMembers, this, roomId)
     }
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     return Object.keys(roomMemberListDict.roomMemberDict)
@@ -250,8 +250,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (!isForced) {
       roomMemberListDict = await this.dedudeApi.dedupe(this.syncRoomMembers, this, roomId)
     } else {
-      // TODO:
-      roomMemberListDict = {} as RoomMemberDict
+      roomMemberListDict = await queueApi.add(this.syncRoomMembers, this, roomId)
     }
     this.cacheRoomMemberRawPayload.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
     return roomMemberListDict.roomMemberDict
@@ -266,8 +265,7 @@ export class IosbirdManager extends IosbirdWebSocket {
     if (!isForced) {
       roomAndContactList = await this.dedudeApi.dedupe(this.syncContactAndRoom, this)
     } else {
-      // TODO:
-      roomAndContactList = {} as IosbirdIOSContactList
+      roomAndContactList = await queueApi.add(this.syncContactAndRoom, this)
     }
     roomAndContactList.list.map((value) => {
       const id = value.id.split('$')[1]
@@ -302,8 +300,7 @@ export class IosbirdManager extends IosbirdWebSocket {
       if (!isForced) {
         roomMemberListDict = await this.dedudeApi.dedupe(this.syncRoomMembers, this, roomId)
       } else {
-        // TODO:
-        roomMemberListDict = {} as RoomMemberDict
+        roomMemberListDict = await queueApi.add(this.syncRoomMembers, this, roomId)
       }
       this.cacheRoomMemberRawPayload!.set(roomMemberListDict.roomId, roomMemberListDict.roomMemberDict)
       const contactIds = Object.keys(roomMemberListDict.roomMemberDict)

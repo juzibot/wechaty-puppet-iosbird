@@ -32,7 +32,7 @@ export class DedupeApi {
   private cleaner: NodeJS.Timer
 
   public static get Instance () {
-    return this.instance || (this.instance =  new DedupeApi())
+    return this.instance || (this.instance = new DedupeApi())
   }
   private constructor () {
     this.cache = {}
