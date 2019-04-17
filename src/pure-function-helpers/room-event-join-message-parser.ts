@@ -12,7 +12,7 @@ import {
 import {
   isRoomId,
   isPayload,
-}               from './is-type'
+}                         from './is-type'
 
 import {
   splitChineseNameList,
@@ -82,16 +82,16 @@ const ROOM_JOIN_OTHER_INVITE_OTHER_QRCODE_REGEX_LIST_EN = [
 
 /**
  * {
- *   "action": "chat",
- *   "to_type": "web",
- *   "s_type": "ios",
- *   "id": "wxid_tdax1huk5hgs12",
- *   "content": "\"林贻民记录\"邀请\"桔小秘\"加入了群聊",
- *   "m_type": "10000",
- *   "mem_id": "wxid_tdax1huk5hgs12$",
- *   "u_id": "5212109738@chatroom",
- *   "type": "ios",
- *   "name": "系统消息"
+ * "action" : "chat",
+ * "to_type": "web",
+ * "s_type" : "ios",
+ * "id"     : "wxid_tdax1huk5hgs12",
+ * "content": "\"林贻民记录\"邀请\"桔小秘\"加入了群聊",
+ * "m_type" : "10000",
+ * "mem_id" : "wxid_tdax1huk5hgs12$",
+ * "u_id"   : "5212109738@chatroom",
+ * "type"   : "ios",
+ * "name"   : "系统消息"
  * }
  * @param rawPayload
  */

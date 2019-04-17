@@ -1,5 +1,8 @@
-import {IosbirdContactPayload, IosbirdRoomMemberPayload} from '../iosbird-schema'
-import { ContactType, Type } from '../iosbird-ws'
+import {
+  IosbirdContactPayload,
+  IosbirdRoomMemberPayload,
+                            } from '../iosbird-schema'
+import { ContactType, Type  } from '../iosbird-ws'
 
 export const memberToContact = function (member: IosbirdRoomMemberPayload): IosbirdContactPayload {
   const contactData: IosbirdContactPayload = {

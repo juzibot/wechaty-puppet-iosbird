@@ -3,16 +3,16 @@
 // tslint:disable:max-line-length
 // tslint:disable:no-shadowed-variable
 
-import test  from 'blue-tape'
+import test                             from 'blue-tape'
 
 import {
   PuppetRoomTopicEvent,
   YOU,
-}                               from '../../wechaty-puppet/src'
+}                                       from '../../wechaty-puppet/src'
 
 import {
   IosbirdMessagePayload,
-}                               from '../iosbird-schema'
+}                                       from '../iosbird-schema'
 
 import { roomTopicEventMessageParser }  from './room-event-topic-message-parser'
 
@@ -31,9 +31,9 @@ test('roomTopicEventMessageParser() ZH-bot-modify-topic', async t => {
     'name'    : '系统消息'
   } as IosbirdMessagePayload
   const EXPECTED_MESSAGE_PAYLOAD_ROOM_TOPIC: PuppetRoomTopicEvent = {
-    changerName : YOU,
-    roomId      : '8744001955@chatroom',
-    topic       : '直播三群1',
+    changerName: YOU,
+    roomId     : '8744001955@chatroom',
+    topic      : '直播三群1',
   }
 
   const payload = roomTopicEventMessageParser(PADCHAT_MESSAGE_PAYLOAD_ROOM_TOPIC)
@@ -57,9 +57,9 @@ test('roomTopicEventMessageParser() ZH-other-modify-topic', async t => {
   } as IosbirdMessagePayload
 
   const EXPECTED_MESSAGE_PAYLOAD_ROOM_TOPIC: PuppetRoomTopicEvent = {
-    changerName : '林贻民',
-    roomId      : '8744001955@chatroom',
-    topic       : '直播三群1',
+    changerName: '林贻民',
+    roomId     : '8744001955@chatroom',
+    topic      : '直播三群1',
   }
 
   const event = roomTopicEventMessageParser(MESSAGE_PAYLOAD)
