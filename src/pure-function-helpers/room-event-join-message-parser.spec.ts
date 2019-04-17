@@ -3,7 +3,7 @@
 // tslint:disable:max-line-length
 // tslint:disable:no-shadowed-variable
 
-import test  from 'blue-tape'
+import test                       from 'blue-tape'
 
 import {
   IosbirdMessagePayload,
@@ -11,7 +11,7 @@ import {
 
 import {
   roomJoinEventMessageParser,
-}                               from './room-event-join-message-parser'
+}                                 from './room-event-join-message-parser'
 
 test('roomJoinEventMessageParser() not detected', async t => {
   t.equal(

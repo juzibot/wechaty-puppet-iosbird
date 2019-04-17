@@ -30,17 +30,17 @@ const ROOM_TOPIC_YOU_REGEX_LIST = [
 
 /**
  * {
- *   "action": "chat",
- *   "to_type": "web",
- *   "s_type": "ios",
- *   "id": "wxid_tdax1huk5hgs12",
- *   "content": "你修改群名为“直播三群1”",
- *   "m_type": "10000",
- *   "cnt_type": 10000,
- *   "u_id": "8744001955@chatroom",
- *   "mem_id": "wxid_tdax1huk5hgs12$",
- *   "type": "ios",
- *   "name": "系统消息"
+ * "action"  : "chat",
+ * "to_type" : "web",
+ * "s_type"  : "ios",
+ * "id"      : "wxid_tdax1huk5hgs12",
+ * "content" : "你修改群名为“直播三群1”",
+ * "m_type"  : "10000",
+ * "cnt_type": 10000,
+ * "u_id"    : "8744001955@chatroom",
+ * "mem_id"  : "wxid_tdax1huk5hgs12$",
+ * "type"    : "ios",
+ * "name"    : "系统消息"
  * }
  */
 export function roomTopicEventMessageParser (

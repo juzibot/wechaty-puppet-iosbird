@@ -76,7 +76,8 @@ import {
                                   } from './pure-function-helpers/room-event-join-message-parser'
 import flatten                      from 'array-flatten'
 import { fileMessageParser }        from './pure-function-helpers/message-file-payload-parser'
-import { roomTopicEventMessageParser } from './pure-function-helpers/room-event-topic-message-parser';
+import {
+  roomTopicEventMessageParser }     from './pure-function-helpers/room-event-topic-message-parser';
 
 
 export interface IosbirdRoomRawPayload {
@@ -196,7 +197,7 @@ export class PuppetIosbird extends Puppet {
     switch (rawPayload.cnt_type) {
       case IosbirdMessageType.SYS:
         await Promise.all([
-          // this.onPadchatMessageFriendshipEvent(rawPayload),
+          // this.onchatMessageFriendshipEvent(rawPayload),
           ////////////////////////////////////////////////
           this.onIosbirdMessageRoomEventJoin(rawPayload),
           // this.onPadchatMessageRoomEventLeave(rawPayload),
