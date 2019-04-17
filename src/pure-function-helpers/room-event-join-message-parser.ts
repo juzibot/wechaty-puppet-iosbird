@@ -11,6 +11,7 @@ import {
 
 import {
   isRoomId,
+  isPayload,
 }               from './is-type'
 
 import {
@@ -97,6 +98,10 @@ const ROOM_JOIN_OTHER_INVITE_OTHER_QRCODE_REGEX_LIST_EN = [
 export async function roomJoinEventMessageParser (
   rawPayload: IosbirdMessagePayload,
 ): Promise<null | PuppetRoomJoinEvent> {
+
+  if (!isPayload(rawPayload)) {
+    return null
+  }
 
   const roomId = rawPayload.u_id
   if (!isRoomId(roomId)) {
