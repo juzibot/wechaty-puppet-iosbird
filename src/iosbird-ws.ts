@@ -189,6 +189,11 @@ export class IosbirdWebSocket extends EventEmitter {
         return
       }
 
+      // 腾讯新闻
+      if (messagePayload.u_id === 'newsapp' || messagePayload === '腾讯新闻') {
+        return
+      }
+
       // 处理心跳信息
       if (messagePayload.action === Action.HEARTBEAT) {
         // 在线
