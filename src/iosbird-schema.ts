@@ -6,6 +6,7 @@ export enum IosbirdMessageType {
   AUDIO      = 2,        // 音频
   VERIFY     = 400,      // ***开启了朋友验证
   LINK       = 495,      // 链接
+  APP        = 4950,     // 邀请入群链接
   FILE       = 6000,     // 文件
   VEDIO      = 6001,     // 视频
   SYS        = 10000,    // 系统消息

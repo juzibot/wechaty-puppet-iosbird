@@ -83,6 +83,7 @@ import {
   friendshipVerifyEventMessageParser
 }                                       from './pure-function-helpers/friendship-event-message-parser'
 import { friendshipRawPayloadParser }   from './pure-function-helpers/friendship-raw-payload-parser'
+import { roomInviteEventMessageParser } from './pure-function-helpers/room-event-invite-message-parser'
 
 
 export interface IosbirdRoomRawPayload {
@@ -109,7 +110,7 @@ export class PuppetIosbird extends Puppet {
     super(options)
     this.iosbirdManager = new IosbirdManager (WEBSOCKET_SERVER, BOT_ID)
     const lruOptions: LRU.Options = {
-      max: 1000,
+      max: 10000,
       // length: function (n) { return n * 2},
       dispose (key: string, val: any) {
         log.silly('PuppetIosbird', 'constructor() lruOptions.dispose(%s, %s)', key, JSON.stringify(val))
@@ -209,6 +210,10 @@ export class PuppetIosbird extends Puppet {
           this.onPadchatMessageRoomEventTopic(rawPayload),
         ])
         break
+      case IosbirdMessageType.APP: {
+        await this.onPadproMessageRoomInvitation(rawPayload)
+        break
+      }
       case IosbirdMessageType.PICTURE:
       case IosbirdMessageType.VEDIO:
       case IosbirdMessageType.TEXT:
@@ -324,6 +329,21 @@ export class PuppetIosbird extends Puppet {
     ) {
       // Maybe load contact here since we know a new friend is added
       this.emit('friendship', rawPayload.msgId)
+    }
+  }
+
+  /**
+   *  Look for join room invitation event
+   * @param rawPayload
+   */
+  protected async onPadproMessageRoomInvitation (rawPayload: IosbirdMessagePayload): Promise<void> {
+    log.verbose('PuppetIosbird', 'onPadproMessageRoomInvitation(%s)', rawPayload)
+    const roomInviteEvent = await roomInviteEventMessageParser(rawPayload)
+
+    if (roomInviteEvent) {
+      this.emit('room-invite', roomInviteEvent.id)
+    } else {
+      this.emit('message', rawPayload.msgId)
     }
   }
 
@@ -595,6 +615,7 @@ export class PuppetIosbird extends Puppet {
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, file)
     log.warn('MessageSendFile Unsupported')
+    throw new Error('MessageSendFile is not supported yet')
   }
 
   // TODO:
@@ -604,7 +625,7 @@ export class PuppetIosbird extends Puppet {
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend("%s", %s)', JSON.stringify(receiver), contactId)
     log.warn('MessageSendContact Unsupported')
-    return
+    throw new Error('messageSendContact is not supported yet')
   }
 
   // TODO:
@@ -614,7 +635,7 @@ export class PuppetIosbird extends Puppet {
                               JSON.stringify(urlLinkPayload),
                 )
     log.warn('MessageSendUrl Unsupported!')
-    return
+    throw new Error('messageSendUrl is not supported yet')
   }
 
   public async messageForward (
@@ -867,15 +888,25 @@ export class PuppetIosbird extends Puppet {
   // TODO:
   public async roomInvitationAccept (roomInvitationId: string): Promise<void> {
     log.verbose('PuppetIosbird', 'roomInvitationAccept(%s)', roomInvitationId)
+    throw new Error ('room invitation accept is not supported yet')
   }
 
-  public async roomInvitationRawPayload (roomInvitationId: string): Promise<any> {
+  public async roomInvitationRawPayload (roomInvitationId: string): Promise<IosbirdMessagePayload> {
     log.verbose('PuppetIosbird', 'roomInvitationRawPayload(%s)', roomInvitationId)
+    const rawPayload = this.cacheIosbirdMessagePayload.get(roomInvitationId)
+    if (!rawPayload) {
+      throw new Error('no rawPayload')
+    }
+    return rawPayload
   }
 
-  public async roomInvitationRawPayloadParser (rawPayload: any): Promise<RoomInvitationPayload> {
+  public async roomInvitationRawPayloadParser (rawPayload: IosbirdMessagePayload): Promise<RoomInvitationPayload> {
     log.verbose('PuppetIosbird', 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
-    return rawPayload
+    const roomInvitationPayload = await roomInviteEventMessageParser(rawPayload)
+    if (! roomInvitationPayload) {
+      throw new Error(`payload content of roomInvitationId: ${rawPayload.msgId} can not parse`)
+    }
+    return roomInvitationPayload
   }
 
   /**
@@ -914,6 +945,7 @@ export class PuppetIosbird extends Puppet {
     friendshipId : string,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'friendshipAccept(%s)', friendshipId)
+    throw new Error ('Friendship accept is not supprted yet!!!')
   }
 
   public ding (data?: string): void {
