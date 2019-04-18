@@ -1,5 +1,5 @@
 import { IosbirdMessagePayload  } from '../iosbird-schema'
-import { UrlLinkPayload         } from '../../wechaty-puppet/src'
+import { UrlLinkPayload         } from 'wechaty-puppet'
 
 interface LinkSchema {
   urlStr    : string,   // url of link

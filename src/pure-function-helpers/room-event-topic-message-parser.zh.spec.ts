@@ -8,7 +8,7 @@ import test                             from 'blue-tape'
 import {
   PuppetRoomTopicEvent,
   YOU,
-}                                       from '../../wechaty-puppet/src'
+}                                       from 'wechaty-puppet'
 
 import {
   IosbirdMessagePayload,
