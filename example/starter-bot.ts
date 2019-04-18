@@ -2,6 +2,7 @@ import { PuppetIosbird } from '../src/puppet-iosbird'
 import {
   Wechaty,
   Friendship,
+  Room,
                       } from 'wechaty'
 import { MessageType  } from 'wechaty-puppet'
 
@@ -172,6 +173,17 @@ bot
     if (content === '退出群聊') {
       await room.quit()
     }
+  }
+
+  /**
+   * 转发
+   */
+  const forwardRoom = await bot.Room.find({topic: '小桔、小桔机器人管家、林贻民'})
+  console.log('forward: ########################################')
+  console.log(forwardRoom)
+  if (forwardRoom) {
+    message.forward(forwardRoom)
+    console.log('forward: ########################################')
   }
 
 })

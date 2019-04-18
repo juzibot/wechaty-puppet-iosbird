@@ -529,7 +529,7 @@ export class PuppetIosbird extends Puppet {
       } else {
         fromId = rawPayload.u_id
       }
-    } else {
+    } else if (rawPayload.mem_id) {
       fromId = rawPayload.mem_id.split('$')[1]
       if (isRoomId(fromId)) {
         fromId = BOT_ID
