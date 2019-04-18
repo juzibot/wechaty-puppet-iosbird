@@ -136,6 +136,8 @@ export class PuppetIosbird extends Puppet {
       this.emit('error', error)
     })
 
+    this.iosbirdManager.on('ready', () => this.emit('ready'))
+
     /**
      * Save meaage for future usage
      */
@@ -173,8 +175,6 @@ export class PuppetIosbird extends Puppet {
 
     this.emit('logout', this.id) // becore we will throw above by logonoff() when this.user===undefined
     this.id = undefined
-
-    // TODO: do the logout job
   }
 
   protected async onIosbirdMessage (rawPayload: IosbirdMessagePayload): Promise<void> {
@@ -720,9 +720,10 @@ export class PuppetIosbird extends Puppet {
     const roomId = rawPayload.id.split('$')[1]
     const memberIdList = await this.roomMemberList(roomId)
     const payload: RoomPayload = {
-      id           : roomId,
-      memberIdList : memberIdList,
-      topic        : rawPayload.nick,
+      id          : roomId,
+      memberIdList: memberIdList,
+      topic       : rawPayload.nick,
+      ownerId     : '',                // no support now
     }
 
     return payload
