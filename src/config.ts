@@ -5,12 +5,12 @@ import qrImage      from 'qr-image'
 import promiseRetry = require('promise-retry')
 
 export const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
-export const WEBSOCKET_SERVER               = '116.196.92.94:7888'
-export const BOT_ID                         = 'wxid_tdax1huk5hgs12'
+export const WEBSOCKET_SERVER               = 'iosbird.botorange.com:7888'
+export const BOT_ID                         = process.env['BOT_ID']
 
 export function qrCodeForChatie (): FileBox {
-  const name                           = 'qrcode-for-chatie.png'
-  const type                           = 'png'
+  const name = 'qrcode-for-chatie.png'
+  const type = 'png'
 
   const qrStream = qrImage.image(CHATIE_OFFICIAL_ACCOUNT_QRCODE, { type })
   return FileBox.fromStream(qrStream, name)

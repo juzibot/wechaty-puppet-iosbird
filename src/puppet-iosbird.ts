@@ -108,6 +108,9 @@ export class PuppetIosbird extends Puppet {
     public options: PuppetOptions = {},
   ) {
     super(options)
+    if (!BOT_ID) {
+      throw new Error ('You should specify the environment varible BOT_ID')
+    }
     this.iosbirdManager = new IosbirdManager (WEBSOCKET_SERVER, BOT_ID)
     const lruOptions: LRU.Options = {
       max: 10000,
