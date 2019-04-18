@@ -234,6 +234,11 @@ bot
     console.error(e)
   }
 })
+
+.on('ready', () => {
+  console.log('ready: ################################')
+  console.log('ready: ################################')
+})
 .start()
 .catch(async (e) => {
   console.error('Bot start() fail:', e)
