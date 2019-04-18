@@ -13,7 +13,7 @@ import {
 import {
   FRIENDSHIP_CONFIRM_REGEX_LIST,
  }
-                              from './pure-function-helpers/friendship-event-message-parser';
+                              from './pure-function-helpers/friendship-event-message-parser'
 
 const uuid = require('uuidv4')
 

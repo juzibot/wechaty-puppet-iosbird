@@ -7,7 +7,7 @@ import test  from 'blue-tape'
 
 import {
   FriendshipType,
-}                             from '../../wechaty-puppet/src'
+}                             from 'wechaty-puppet'
 
 import {
   IosbirdMessagePayload,

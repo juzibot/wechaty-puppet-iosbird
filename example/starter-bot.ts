@@ -1,6 +1,9 @@
 import { PuppetIosbird } from '../src/puppet-iosbird'
-import { Wechaty, Message, Contact, Room, Friendship    } from '../wechaty/src'
-import { MessageType } from '../wechaty-puppet/src';
+import {
+  Wechaty,
+  Friendship,
+                      } from 'wechaty'
+import { MessageType  } from 'wechaty-puppet'
 
 const puppet  = new PuppetIosbird()
 const bot = new Wechaty({ puppet })

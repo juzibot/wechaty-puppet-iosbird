@@ -17,104 +17,104 @@ export interface IosbirdMessagePayload {
   /**
    * Text Mesage
    * {
-	 *  "action": "chat",
-	 *  "to_type": "web",
-	 *  "s_type": "ios",
-	 *  "id": "wxid_atjcz7dvaxn422",
-	 *  "content": "你好",
-	 *  "mem_id": "",
-	 *  "u_id": "tiancdj",
-	 *  "type": "ios",
-	 *  "name": "天长地久"
+	 * "action" : "chat",
+	 * "to_type": "web",
+	 * "s_type" : "ios",
+	 * "id"     : "wxid_atjcz7dvaxn422",
+	 * "content": "你好",
+	 * "mem_id" : "",
+	 * "u_id"   : "tiancdj",
+	 * "type"   : "ios",
+	 * "name"   : "天长地久"
    * }
    *
    * Audio Message
    * {
-	 *  "action": "chat",
-	 *  "to_type": "web",
-	 *  "s_type": "ios",
-	 *  "id": "wxid_atjcz7dvaxn422",
-	 *  "cnt_type": 2,
-	 *  "content": "http:\/\/useoss.51talk.com\/other\/b503aa2f8abcc030a6e2367463a6a86e.mp3",
-	 *  "mem_id": "",
-	 *  "u_id": "tiancdj",
-	 *  "type": "ios",
-	 *  "m_aud_time": "4520",
-	 *  "name": "天长地久"
+	 * "action"    : "chat",
+	 * "to_type"   : "web",
+	 * "s_type"    : "ios",
+	 * "id"        : "wxid_atjcz7dvaxn422",
+	 * "cnt_type"  : 2,
+	 * "content"   : "http:\/\/useoss.51talk.com\/other\/b503aa2f8abcc030a6e2367463a6a86e.mp3",
+	 * "mem_id"    : "",
+	 * "u_id"      : "tiancdj",
+	 * "type"      : "ios",
+	 * "m_aud_time": "4520",
+	 * "name"      : "天长地久"
    * }
    *
    * Picture Message
    * {
-   *  "action": "chat",
-   *  "to_type": "web",
-   *  "s_type": "ios",
-   *  "id": "wxid_tdax1huk5hgs12",
-   *  "cnt_type": 1,
-   *  "content": "http://useoss.51talk.com/images/12a8001f413d04321b0b87b331e6f962.png,http://useoss.51talk.com/images/5ad25577811121102f56ef6d61b47ffd.png,40",
-   *  "mem_id": "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
-   *  "u_id": "5212109738@chatroom",
-   *  "type": "ios",
-   *  "name": "林贻民"
+   * "action"  : "chat",
+   * "to_type" : "web",
+   * "s_type"  : "ios",
+   * "id"      : "wxid_tdax1huk5hgs12",
+   * "cnt_type": 1,
+   * "content" : "http://useoss.51talk.com/images/12a8001f413d04321b0b87b331e6f962.png,http://useoss.51talk.com/images/5ad25577811121102f56ef6d61b47ffd.png,40",
+   * "mem_id"  : "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
+   * "u_id"    : "5212109738@chatroom",
+   * "type"    : "ios",
+   * "name"    : "林贻民"
    * }
    *
    * Video Message
    * {
-   *   "action": "chat",
-   *   "to_type": "web",
-   *   "s_type": "ios",
-   *   "id": "wxid_tdax1huk5hgs12",
-   *   "cnt_type": 6001,
-   *   "content": "{\"thumbImgUrl\":\"http:\\/\\/useoss.51talk.com\\/images\\/0be358b3cdbf8bacebb915b0eccd4ee9.jpg\",\"videoMsgId\":41}",
-   *   "mem_id": "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
-   *   "u_id": "5212109738@chatroom",
-   *   "type": "ios",
-   *   "name": "林贻民"
+   * "action"  : "chat",
+   * "to_type" : "web",
+   * "s_type"  : "ios",
+   * "id"      : "wxid_tdax1huk5hgs12",
+   * "cnt_type": 6001,
+   * "content" : "{\"thumbImgUrl\":\"http:\\/\\/useoss.51talk.com\\/images\\/0be358b3cdbf8bacebb915b0eccd4ee9.jpg\",\"videoMsgId\":41}",
+   * "mem_id"  : "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
+   * "u_id"    : "5212109738@chatroom",
+   * "type"    : "ios",
+   * "name"    : "林贻民"
    * }
    *
    * Red Packet
    * {
-   *  "action": "chat",
-   *  "to_type": "web",
-   *  "s_type": "ios",
-   *  "id": "wxid_tdax1huk5hgs12",
-   *  "cnt_type": 492001,
-   *  "content": "林贻民 : [红包]Best wishes",
-   *  "mem_id": "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
-   *  "u_id": "5212109738@chatroom",
-   *  "type": "ios",
-   *  "name": "林贻民"
+   * "action"  : "chat",
+   * "to_type" : "web",
+   * "s_type"  : "ios",
+   * "id"      : "wxid_tdax1huk5hgs12",
+   * "cnt_type": 492001,
+   * "content" : "林贻民 : [红包]Best wishes",
+   * "mem_id"  : "wxid_tdax1huk5hgs12$wxid_j76jk7muhgqz22",
+   * "u_id"    : "5212109738@chatroom",
+   * "type"    : "ios",
+   * "name"    : "林贻民"
    * }
    *
    * FILE
    *
    * {
-   *   "action": "chat",
-   *   "to_type": "web",
-   *   "s_type": "ios",
-   *   "id": "wxid_tdax1huk5hgs12",
-   *   "cnt_type": 6000,
-   *   "content": "{\"title\":\"my_stop_words\",\"url\":\"http:\\/\\/useoss.51talk.com\\/other\\/6a0382a5523082052ee7f86c96e7533d.dat\",\"size\":\"16124\"}",
-   *   "mem_id": "",
-   *   "u_id": "wxid_j76jk7muhgqz22",
-   *   "type": "ios",
-   *   "name": "林贻民"
+   * "action"  : "chat",
+   * "to_type" : "web",
+   * "s_type"  : "ios",
+   * "id"      : "wxid_tdax1huk5hgs12",
+   * "cnt_type": 6000,
+   * "content" : "{\"title\":\"my_stop_words\",\"url\":\"http:\\/\\/useoss.51talk.com\\/other\\/6a0382a5523082052ee7f86c96e7533d.dat\",\"size\":\"16124\"}",
+   * "mem_id"  : "",
+   * "u_id"    : "wxid_j76jk7muhgqz22",
+   * "type"    : "ios",
+   * "name"    : "林贻民"
    * }
    *
    * LINK
    * {
-   *   "id": "wxid_tdax1huk5hgs12",
-   *   "m_nsTitle": "Writing cross-platform Node.js | George Ornbo",
-   *   "mem_id": "",
-   *   "s_type": "ios",
-   *   "type": "ios",
-   *   "action": "chat",
-   *   "cnt_type": 495,
-   *   "m_nsDesc": "https://shapeshed.com/writing-cross-platform-node/",
-   *   "m_nsThumbUrl": "",
-   *   "to_type": "web",
-   *   "u_id": "wxid_j76jk7muhgqz22",
-   *   "name": "林贻民",
-   *   "content": "{\"urlStr\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"title\":\"Writing cross-platform Node.js | George Ornbo\",\"thumbUrl\":\"\",\"desc\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"localMsgId\":\"\"}"
+   * "id"          : "wxid_tdax1huk5hgs12",
+   * "m_nsTitle"   : "Writing cross-platform Node.js | George Ornbo",
+   * "mem_id"      : "",
+   * "s_type"      : "ios",
+   * "type"        : "ios",
+   * "action"      : "chat",
+   * "cnt_type"    : 495,
+   * "m_nsDesc"    : "https://shapeshed.com/writing-cross-platform-node/",
+   * "m_nsThumbUrl": "",
+   * "to_type"     : "web",
+   * "u_id"        : "wxid_j76jk7muhgqz22",
+   * "name"        : "林贻民",
+   * "content"     : "{\"urlStr\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"title\":\"Writing cross-platform Node.js | George Ornbo\",\"thumbUrl\":\"\",\"desc\":\"https:\\/\\/shapeshed.com\\/writing-cross-platform-node\\/\",\"localMsgId\":\"\"}"
    * }
    */
   action       : string,               // 操作类型
@@ -139,28 +139,28 @@ export interface IosbirdContactPayload {
 	/**
    * Room information
    * {
-	 *	"c_type": "1",
-	 *	"set_to_top": false,
-	 *	"id": "wxid_atjcz7dvaxn422$4749786460@chatroom",
-	 *	"c_remark": "",
-	 *	"nick": "天长地久、童心、黑鸟小萌萌",
-	 *	"m_uiLastUpdate": 1544103278,
-	 *	"allow_owner_approve_value": false,
-	 *	"type": "ios",
-	 *	"mute_session": false
+	 * "c_type"                   : "1",
+	 * "set_to_top"               : false,
+	 * "id"                       : "wxid_atjcz7dvaxn422$4749786460@chatroom",
+	 * "c_remark"                 : "",
+	 * "nick"                     : "天长地久、童心、黑鸟小萌萌",
+	 * "m_uiLastUpdate"           : 1544103278,
+	 * "allow_owner_approve_value": false,
+	 * "type"                     : "ios",
+	 * "mute_session"             : false
 	 * }
    *
    * Contact Information
    * {
-	 *	"c_type": "0",
-	 *	"set_to_top": false,
-	 *	"id": "wxid_atjcz7dvaxn422$tiancdj",
-	 *	"c_remark": "",
-	 *	"nick": "天长地久",
-	 *	"m_uiLastUpdate": 1544102744,
-	 *	"type": "ios",
-	 *	"mute_session": false,
-	 *	"name": "天长地久"
+	 * "c_type"        : "0",
+	 * "set_to_top"    : false,
+	 * "id"            : "wxid_atjcz7dvaxn422$tiancdj",
+	 * "c_remark"      : "",
+	 * "nick"          : "天长地久",
+	 * "m_uiLastUpdate": 1544102744,
+	 * "type"          : "ios",
+	 * "mute_session"  : false,
+	 * "name"          : "天长地久"
 	 * }
    */
   c_type                   : ContactType,   // 0 is Contact, and 1 is Room

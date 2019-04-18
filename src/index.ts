@@ -1,4 +1,4 @@
-export * from './puppet-iosbird'
+export *      from './puppet-iosbird'
 export {
   VERSION,
   log,

@@ -43,8 +43,7 @@ import {
 
   UrlLinkPayload,
   MessageType,
-  FriendshipPayloadReceive,
-}                                       from '../wechaty-puppet/src'
+}                                       from 'wechaty-puppet'
 
 import {
   BOT_ID,
@@ -53,7 +52,6 @@ import {
   qrCodeForChatie,
   VERSION,
   WEBSOCKET_SERVER,
-  retry,
 }                                       from './config'
 import {
   Type,
@@ -78,13 +76,13 @@ import flatten                          from 'array-flatten'
 import { fileMessageParser }            from './pure-function-helpers/message-file-payload-parser'
 import {
   roomTopicEventMessageParser,
-}                                       from './pure-function-helpers/room-event-topic-message-parser';
+}                                       from './pure-function-helpers/room-event-topic-message-parser'
 import {
   friendshipConfirmEventMessageParser,
   friendshipReceiveEventMessageParser,
   friendshipVerifyEventMessageParser
-}                                       from './pure-function-helpers/friendship-event-message-parser';
-import { friendshipRawPayloadParser }   from './pure-function-helpers/friendship-raw-payload-parser';
+}                                       from './pure-function-helpers/friendship-event-message-parser'
+import { friendshipRawPayloadParser }   from './pure-function-helpers/friendship-raw-payload-parser'
 
 
 export interface IosbirdRoomRawPayload {
@@ -241,6 +239,7 @@ export class PuppetIosbird extends Puppet {
       // 重新从底层获取数据
       await this.iosbirdManager.roomMemberRawPayload(roomId, true)
 
+      // const inviteeIdList = [this.roomMemberSearch(roomId, inviteeNameList[0])]
       const inviteeIdList = flatten<string>(
         await Promise.all(
           inviteeNameList.map(
@@ -498,7 +497,6 @@ export class PuppetIosbird extends Puppet {
     let fromId: undefined | string
     let roomId: undefined | string
     let toId:   undefined | string
-    let mentionIdList: undefined | string[]
 
     /**
      * 1. Set Room Id
@@ -559,7 +557,6 @@ export class PuppetIosbird extends Puppet {
       payload = {
         ...payloadBase,
         fromId,
-        mentionIdList,
         roomId,
         toId,
       }
@@ -567,7 +564,6 @@ export class PuppetIosbird extends Puppet {
       payload = {
         ...payloadBase,
         fromId,
-        mentionIdList,
         roomId,
         toId,
       }

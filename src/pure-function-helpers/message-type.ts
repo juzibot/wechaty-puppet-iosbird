@@ -1,6 +1,6 @@
 import { IosbirdMessageType } from '../iosbird-schema'
 
-import { MessageType }        from '../../wechaty-puppet/src'
+import { MessageType }        from 'wechaty-puppet'
 
 export function messageType (
   rawType?: IosbirdMessageType,
