@@ -24,7 +24,6 @@ export async function friendshipRawPayloadParser (
     /**
      * 1. Confirm Event
      */
-    console.log('########################################')
     return friendshipRawPayloadParserConfirm(rawPayload)
 
   } else if (friendshipVerifyEventMessageParser(rawPayload)) {

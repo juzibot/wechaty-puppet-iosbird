@@ -10,6 +10,10 @@ import {
   IosbirdRoomMemberPayload,
   IosbirdAvatarSchema,
 }                             from './iosbird-schema'
+import {
+  FRIENDSHIP_CONFIRM_REGEX_LIST,
+ }
+                              from './pure-function-helpers/friendship-event-message-parser';
 
 const uuid = require('uuidv4')
 
@@ -81,6 +85,10 @@ export interface IosbirdIOSContactList {
   action: Action,
 }
 
+// 连接超时
+const CONNECTED_TIMEOUT = 30 * 1000
+// ios plugin 掉线时提示时间间隔
+const OFFLINE_PROMPT_INTERVAL = 30 * 1000
 export class IosbirdWebSocket extends EventEmitter {
   private ws: WebSocket | undefined
 
@@ -143,7 +151,7 @@ export class IosbirdWebSocket extends EventEmitter {
         clearInterval(interval)
         this.emit('error', 'not receive ios socket heartbeat information, may be ios plugin is broken, please check it out.')
       }
-    }, 30 * 1000)
+    }, CONNECTED_TIMEOUT)
     await new Promise((resolve, reject) => {
       this.ws!.once('open', () => {
         log.verbose('IosbirdWebSocket', 'initWebSocket() Promise() ws.on(open)')
@@ -240,7 +248,7 @@ export class IosbirdWebSocket extends EventEmitter {
           }
           this.iosHeartbeatTimer = setInterval (() => {
             log.error ('IosbirdWebSocket', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
-          }, 5 * 1000)
+          },OFFLINE_PROMPT_INTERVAL)
         }
         return
       }
@@ -277,7 +285,13 @@ export class IosbirdWebSocket extends EventEmitter {
         messagePayload.cnt_type = IosbirdMessageType.TEXT
       }
 
-      if (messagePayload.name === '系统消息'){
+      // 是否是好友请求通过消息
+      const isRecevied = FRIENDSHIP_CONFIRM_REGEX_LIST.some(regex => regex.test(messagePayload.content))
+
+      if (messagePayload.name === '系统消息' ||
+          messagePayload.cnt_type === IosbirdMessageType.VERIFY ||
+          isRecevied
+      ){
         messagePayload.cnt_type = IosbirdMessageType.SYS
       }
       this.emit('message', messagePayload as IosbirdMessagePayload)

@@ -19,9 +19,9 @@
 
 import {
   FileBox,
-}                                   from 'file-box'
+}                                       from 'file-box'
 
-import LRU                          from 'lru-cache'
+import LRU                              from 'lru-cache'
 
 import {
   ContactGender,
@@ -43,8 +43,8 @@ import {
 
   UrlLinkPayload,
   MessageType,
-  YOU,
-}                                   from '../wechaty-puppet/src'
+  FriendshipPayloadReceive,
+}                                       from '../wechaty-puppet/src'
 
 import {
   BOT_ID,
@@ -54,30 +54,37 @@ import {
   VERSION,
   WEBSOCKET_SERVER,
   retry,
-}                                   from './config'
+}                                       from './config'
 import {
   Type,
-}                                   from './iosbird-ws'
-import { messageType }              from './pure-function-helpers/message-type'
+}                                       from './iosbird-ws'
+import { messageType }                  from './pure-function-helpers/message-type'
 import {
   isRoomId,
   isContactId
-}                                   from './pure-function-helpers/is-type'
+}                                       from './pure-function-helpers/is-type'
 import {
   IosbirdMessagePayload,
   IosbirdContactPayload,
   IosbirdRoomMemberPayload,
   IosbirdMessageType
-}                                   from './iosbird-schema'
-import { IosbirdManager }           from './iosbird-manager'
-import { linkMessageParser }        from './pure-function-helpers/message-link-payload-parser'
+}                                       from './iosbird-schema'
+import { IosbirdManager }               from './iosbird-manager'
+import { linkMessageParser }            from './pure-function-helpers/message-link-payload-parser'
 import {
   roomJoinEventMessageParser,
-                                  } from './pure-function-helpers/room-event-join-message-parser'
-import flatten                      from 'array-flatten'
-import { fileMessageParser }        from './pure-function-helpers/message-file-payload-parser'
+                                  }     from './pure-function-helpers/room-event-join-message-parser'
+import flatten                          from 'array-flatten'
+import { fileMessageParser }            from './pure-function-helpers/message-file-payload-parser'
 import {
-  roomTopicEventMessageParser }     from './pure-function-helpers/room-event-topic-message-parser';
+  roomTopicEventMessageParser,
+}                                       from './pure-function-helpers/room-event-topic-message-parser';
+import {
+  friendshipConfirmEventMessageParser,
+  friendshipReceiveEventMessageParser,
+  friendshipVerifyEventMessageParser
+}                                       from './pure-function-helpers/friendship-event-message-parser';
+import { friendshipRawPayloadParser }   from './pure-function-helpers/friendship-raw-payload-parser';
 
 
 export interface IosbirdRoomRawPayload {
@@ -197,7 +204,7 @@ export class PuppetIosbird extends Puppet {
     switch (rawPayload.cnt_type) {
       case IosbirdMessageType.SYS:
         await Promise.all([
-          // this.onchatMessageFriendshipEvent(rawPayload),
+          this.onIosbirdMessageFriendshipEvent(rawPayload),
           ////////////////////////////////////////////////
           this.onIosbirdMessageRoomEventJoin(rawPayload),
           // this.onPadchatMessageRoomEventLeave(rawPayload),
@@ -291,6 +298,33 @@ export class PuppetIosbird extends Puppet {
       await this.iosbirdManager.syncContactsAndRooms(true)
 
       this.emit('room-topic',  roomId, newTopic, oldTopic, changerId)
+    }
+  }
+
+  /**
+   * Look for friendship event
+   */
+  protected async onIosbirdMessageFriendshipEvent (rawPayload: IosbirdMessagePayload): Promise<void> {
+    log.verbose('PuppetIosbird', 'onIosbirdMessageFriendshipEvent({id=%s})', rawPayload.msgId)
+
+    /**
+     * 1. Look for friendship confirm event
+     */
+    const friendshipConfirmContactId = friendshipConfirmEventMessageParser(rawPayload)
+    /**
+     * 2. Look for friendship receive event
+     */
+    const friendshipReceiveContactId = await friendshipReceiveEventMessageParser(rawPayload)
+    /**
+     * 3. Look for friendship verify event
+     */
+    const friendshipVerifyContactId = friendshipVerifyEventMessageParser(rawPayload)
+    if (   friendshipConfirmContactId
+        || friendshipReceiveContactId
+        || friendshipVerifyContactId
+    ) {
+      // Maybe load contact here since we know a new friend is added
+      this.emit('friendship', rawPayload.msgId)
     }
   }
 
@@ -451,7 +485,7 @@ export class PuppetIosbird extends Puppet {
   }
 
   public async messageRawPayloadParser (rawPayload: IosbirdMessagePayload): Promise<MessagePayload> {
-    log.verbose('PuppetIosbird', 'messagePayload(%s)', JSON.stringify(rawPayload, null, 2))
+    log.verbose('PuppetIosbird', 'messagePayload(%s)', rawPayload.msgId)
 
     const type = messageType(rawPayload.cnt_type)
     let payloadBase = {
@@ -684,6 +718,7 @@ export class PuppetIosbird extends Puppet {
     return roomIdList
   }
 
+  // 群主踢人
   public async roomDel (
     roomId    : string,
     contactId : string,
@@ -759,7 +794,7 @@ export class PuppetIosbird extends Puppet {
     return roomId
   }
 
-  // TODO:
+  // 机器人自己退群
   public async roomQuit (roomId: string): Promise<void> {
     log.verbose('PuppetIosbird', 'roomQuit(%s)', roomId)
     if (!this.iosbirdManager) {
@@ -808,7 +843,6 @@ export class PuppetIosbird extends Puppet {
     }
   }
 
-  // TODO:
   public async roomAnnounce (roomId: string)                : Promise<string>
   public async roomAnnounce (roomId: string, text: string)  : Promise<void>
 
@@ -823,7 +857,8 @@ export class PuppetIosbird extends Puppet {
     }
     log.info('PuppetIosbird', 'roomAnnounce(%s)', roomId)
     // TODO: return annoucement
-    return 'iosbird announcement for ' + roomId
+    log.warn ('get roomAnnounce is not support now!!!')
+    return 'It is not support now.'
   }
 
   /**
@@ -831,6 +866,7 @@ export class PuppetIosbird extends Puppet {
    * Room Invitation
    *
    */
+  // TODO:
   public async roomInvitationAccept (roomInvitationId: string): Promise<void> {
     log.verbose('PuppetIosbird', 'roomInvitationAccept(%s)', roomInvitationId)
   }
@@ -849,11 +885,19 @@ export class PuppetIosbird extends Puppet {
    * Friendship
    *
    */
-  public async friendshipRawPayload (id: string)            : Promise<any> {
-    return { id } as any
-  }
-  public async friendshipRawPayloadParser (rawPayload: any) : Promise<FriendshipPayload> {
+  public async friendshipRawPayload (id: string): Promise<IosbirdMessagePayload> {
+    log.verbose('PuppetIosbird', 'friendshipRawPayload(%s)', id)
+    const rawPayload = this.cacheIosbirdMessagePayload.get(id)
+    if (!rawPayload) {
+      throw new Error('no rawPayload')
+    }
     return rawPayload
+  }
+  public async friendshipRawPayloadParser (rawPayload: IosbirdMessagePayload) : Promise<FriendshipPayload> {
+    log.verbose('PuppetIosbird', `friendshipRawPayloadParser({id=${rawPayload.msgId}})`)
+
+    const payload: FriendshipPayload = await friendshipRawPayloadParser(rawPayload)
+    return payload
   }
 
   public async friendshipAdd (
