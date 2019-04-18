@@ -178,13 +178,12 @@ bot
   /**
    * 转发
    */
-  const forwardRoom = await bot.Room.find({topic: '小桔、小桔机器人管家、林贻民'})
-  console.log('forward: ########################################')
-  console.log(forwardRoom)
-  if (forwardRoom) {
-    message.forward(forwardRoom)
-    console.log('forward: ########################################')
-  }
+  // const forwardRoom = await bot.Room.find({topic: '小桔、小桔机器人管家、林贻民'})
+  // console.log('forward: ########################################')
+  // if (forwardRoom) {
+  //   message.forward(forwardRoom)
+  // }
+  // console.log('forward: ########################################')
 
 })
 .on('room-join', async (room, inviteeList, inviter) => {

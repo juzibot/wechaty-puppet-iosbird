@@ -594,6 +594,7 @@ export class PuppetIosbird extends Puppet {
     file     : FileBox,
   ): Promise<void> {
     log.verbose('PuppetIosbird', 'messageSend(%s, %s)', receiver, file)
+    log.warn('MessageSendFile Unsupported')
   }
 
   // TODO:
@@ -613,6 +614,7 @@ export class PuppetIosbird extends Puppet {
                               JSON.stringify(urlLinkPayload),
                 )
     log.warn('MessageSendUrl Unsupported!')
+    return
   }
 
   public async messageForward (
