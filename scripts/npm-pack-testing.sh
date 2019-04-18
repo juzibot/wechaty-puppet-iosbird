@@ -25,12 +25,3 @@ npm install *-*.*.*.tgz \
   memory-card \
   "wechaty-puppet@$NPM_TAG" \
 
-./node_modules/.bin/tsc \
-  --esModuleInterop \
-  --lib esnext \
-  --noEmitOnError \
-  --noImplicitAny \
-  --target es6 \
-  --module commonjs \
-  smoke-testing.ts
-
