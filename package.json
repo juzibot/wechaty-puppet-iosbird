@@ -51,6 +51,7 @@
   "homepage": "https://github.com/botorange/wechaty-puppet-iosbird#readme",
   "devDependencies": {
     "@types/blue-tape": "^0.1.31",
+    "@types/fs-extra": "^5.0.5",
     "@types/lru-cache": "^4.1.1",
     "@types/node": "^10.3.6",
     "@types/normalize-package-data": "^2.4.0",
