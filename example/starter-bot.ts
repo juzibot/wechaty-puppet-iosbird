@@ -183,6 +183,32 @@ bot
   console.log(`Room tpoic:  ${oldTopic} --> ${newTopic}`)
   console.log(`changed by ${changer.name()}`)
 })
+.on('friendship', async friendship => {
+  try {
+    console.log(`received friend event.`)
+    switch (friendship.type()) {
+
+      // 1. New Friend Request
+
+      case Friendship.Type.Receive:
+        // await friendship.accept()
+        console.log('received')
+        break
+
+      // 2. Friend Ship Confirmed
+
+      case Friendship.Type.Confirm:
+        console.log(`friend ship confirmed`)
+        break
+      // 3. Friendship Verify
+      case Friendship.Type.Verify:
+        console.log(`friend ship verify`)
+        break
+    }
+  } catch (e) {
+    console.error(e)
+  }
+})
 .start()
 .catch(async (e) => {
   console.error('Bot start() fail:', e)

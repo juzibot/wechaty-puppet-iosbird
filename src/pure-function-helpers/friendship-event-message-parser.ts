@@ -7,7 +7,7 @@ import { isPayload }             from './is-type'
  * 1. Friendship Confirm Event
  *
  */
-const FRIENDSHIP_CONFIRM_REGEX_LIST = [
+export const FRIENDSHIP_CONFIRM_REGEX_LIST = [
   /^You have added (.+) as your WeChat contact. Start chatting!$/,
   /^你已添加了(.+)，现在可以开始聊天了。$/,
   /I've accepted your friend request. Now let's chat!$/,
@@ -108,7 +108,7 @@ export async function friendshipReceiveEventMessageParser (
  *
  */
 
- /**
+/**
   * {
   * 'action'  : 'chat',
   * 'to_type' : 'web',
@@ -123,7 +123,7 @@ export async function friendshipReceiveEventMessageParser (
   * 'name'    : '林贻民',
   * 'msgId'   : '27866e1a-497f-4ac0-978b-b95b5c859cc8'
   * }
-  */
+*/
 const FRIENDSHIP_VERIFY_REGEX_LIST = [
   /^(.+) has enabled Friend Confirmation/,
   /^(.+)开启了朋友验证，你还不是他（她）朋友。请先发送朋友验证请求，对方验证通过后，才能聊天。/,
