@@ -204,26 +204,26 @@ export class IosbirdWebSocket extends EventEmitter {
       }
 
       // 公众号信息, 按不处理,直接过滤掉
-      /**
-       * {
-       *   "id": "wxid_tdax1huk5hgs12",
-       *   "m_nsTitle": "如何成为 iOS 开发高手？",
-       *   "mem_id": "",
-       *   "s_type": "ios",
-       *   "type": "ios",
-       *   "action": "chat",
-       *   "cnt_type": 495,
-       *   "m_nsDesc": "掌握 iOS 开发核心技术与底层原理，才能成为真正有竞争力的开发高手。",
-       *   "m_nsThumbUrl": "http://mmbiz.qpic.cn/mmbiz_jpg/xabgupsPLbQXrvP0LdYwq9lMGxMMRueMlxQMCqyFw4UGUMOwTagDiayibmyawUbNib4fP4Zl9h9jnJ4ogTUoCuBfw/640?wx_fmt=jpeg&wxtype=jpeg&wxfrom=0",
-       *   "to_type": "web",
-       *   "u_id": "gh_a4dbefba05a2",
-       *   "name": "极客时间",
-       *   "content": "{\"urlStr\":\"http:\\/\\/mp.weixin.qq.com\\/s?__biz=MzI4MTY5NTk4Ng==&mid=2247491412&idx=4&sn=bf3d6861b87030b5949e524dadfc6bff&chksm=eba41cc9dcd395df7410a09fb26b4b747766af13d5ff09e09fa22443b8e2d8e59a051098c9b1&scene=0&xtrack=1#rd\",\"title\":\"如何成为 iOS 开发高手？\",\"thumbUrl\":\"http:\\/\\/mmbiz.qpic.cn\\/mmbiz_jpg\\/xabgupsPLbQXrvP0LdYwq9lMGxMMRueMlxQMCqyFw4UGUMOwTagDiayibmyawUbNib4fP4Zl9h9jnJ4ogTUoCuBfw\\/640?wx_fmt=jpeg&wxtype=jpeg&wxfrom=0\",\"desc\":\"掌握 iOS 开发核心技术与底层原理，才能成为真正有竞争力的开发高手。\"}",
-       *   "msgId": "732d79a9-a9c2-47c1-99c0-8250dc2b249c"
-       * }
-       */
-
       if (/gh_/.test(messagePayload.u_id)) {
+        
+        /**
+         * {
+         * "id"          : "wxid_tdax1huk5hgs12",
+         * "m_nsTitle"   : "如何成为 iOS 开发高手？",
+         * "mem_id"      : "",
+         * "s_type"      : "ios",
+         * "type"        : "ios",
+         * "action"      : "chat",
+         * "cnt_type"    : 495,
+         * "m_nsDesc"    : "掌握 iOS 开发核心技术与底层原理，才能成为真正有竞争力的开发高手。",
+         * "m_nsThumbUrl": "http://mmbiz.qpic.cn/mmbiz_jpg/xabgupsPLbQXrvP0LdYwq9lMGxMMRueMlxQMCqyFw4UGUMOwTagDiayibmyawUbNib4fP4Zl9h9jnJ4ogTUoCuBfw/640?wx_fmt=jpeg&wxtype=jpeg&wxfrom=0",
+         * "to_type"     : "web",
+         * "u_id"        : "gh_a4dbefba05a2",
+         * "name"        : "极客时间",
+         * "content"     : "{\"urlStr\":\"http:\\/\\/mp.weixin.qq.com\\/s?__biz=MzI4MTY5NTk4Ng==&mid=2247491412&idx=4&sn=bf3d6861b87030b5949e524dadfc6bff&chksm=eba41cc9dcd395df7410a09fb26b4b747766af13d5ff09e09fa22443b8e2d8e59a051098c9b1&scene=0&xtrack=1#rd\",\"title\":\"如何成为 iOS 开发高手？\",\"thumbUrl\":\"http:\\/\\/mmbiz.qpic.cn\\/mmbiz_jpg\\/xabgupsPLbQXrvP0LdYwq9lMGxMMRueMlxQMCqyFw4UGUMOwTagDiayibmyawUbNib4fP4Zl9h9jnJ4ogTUoCuBfw\\/640?wx_fmt=jpeg&wxtype=jpeg&wxfrom=0\",\"desc\":\"掌握 iOS 开发核心技术与底层原理，才能成为真正有竞争力的开发高手。\"}",
+         * "msgId"       : "732d79a9-a9c2-47c1-99c0-8250dc2b249c"
+         * }
+         */
         log.info (`message`, `receive a office new, not deal now, just filter it. The content is: ${messagePayload.content}`)
         return
       }
@@ -289,8 +289,8 @@ export class IosbirdWebSocket extends EventEmitter {
       const isRecevied = FRIENDSHIP_CONFIRM_REGEX_LIST.some(regex => regex.test(messagePayload.content))
 
       if (messagePayload.name === '系统消息' ||
-          messagePayload.cnt_type === IosbirdMessageType.VERIFY ||
-          isRecevied
+          messagePayload.cnt_type === IosbirdMessageType.VERIFY ||    // 好友验证消息
+          isRecevied                                                  // 好友请求通过申请消息
       ){
         messagePayload.cnt_type = IosbirdMessageType.SYS
       }

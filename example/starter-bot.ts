@@ -223,6 +223,17 @@ bot
     console.error(e)
   }
 })
+
+.on('room-invite',  async roomInvitation => {
+  try {
+    console.log('room-inviate: ################################')
+    console.log(`received room-invite event.`)
+    console.log(await roomInvitation.inviter())
+    console.log('room-inviate: ################################')
+  } catch (e) {
+    console.error(e)
+  }
+})
 .start()
 .catch(async (e) => {
   console.error('Bot start() fail:', e)
