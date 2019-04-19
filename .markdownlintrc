@@ -3,6 +3,7 @@
   "no-trailing-punctuation": {
     "punctuation": ".,;:!"
   },
+  "MD006": false,
   "MD013": false,
   "MD033": false,
   "first-line-h1": false,
