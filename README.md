@@ -1,9 +1,8 @@
 # WECHATY-PUPPET-IOSBIRD
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8de1413895464131ae0706d5e0f950ae)](https://app.codacy.com/app/linyimin-bupt/wechaty-puppet-iosbird?utm_source=github.com&utm_medium=referral&utm_content=botorange/wechaty-puppet-iosbird&utm_campaign=Badge_Grade_Dashboard)
 [![Powered by Wechaty](https://img.shields.io/badge/Powered%20By-Wechaty-blue.svg)](https://github.com/chatie/wechaty)
 [![npm version](https://badge.fury.io/js/wechaty-puppet-iosbird.svg)](https://badge.fury.io/js/wechaty-puppet-iosbird)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cb818825ff8146bab6a040febb5bd3c3)](https://app.codacy.com/app/windmemory/wechaty-puppet-padpro?utm_source=github.com&utm_medium=referral&utm_content=botorange/wechaty-puppet-padpro&utm_campaign=Badge_Grade_Settings)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8de1413895464131ae0706d5e0f950ae)](https://app.codacy.com/app/linyimin-bupt/wechaty-puppet-iosbird?utm_source=github.com&utm_medium=referral&utm_content=botorange/wechaty-puppet-iosbird&utm_campaign=Badge_Grade_Dashboard)
 
 这个模块是通过ios系统中[越狱插件](https://github.com/botorange/wechaty-puppet-iosbird/wiki/Jail-Break)作为中转，连接微信和WebSocket Server，实现个人号的微信接口。
 
@@ -13,11 +12,11 @@
 
 更多功能包括：
 
-* 消息处理：关键词回复
-* 群管理：自动入群，拉人，踢人
-* 自动处理好友请求
-* 智能对话：通过简单配置，即可加入智能对话系统，完成指定任务
-* ... 请自行开脑洞
+  * 消息处理：关键词回复
+  * 群管理：自动入群，拉人，踢人
+  * 自动处理好友请求
+  * 智能对话：通过简单配置，即可加入智能对话系统，完成指定任务
+  * ... 请自行开脑洞
 
 详情请看[Wechaty](https://github.com/chatie/wechaty)项目 [![NPM Version](https://badge.fury.io/js/wechaty.svg)](https://badge.fury.io/js/wechaty) [![Docker Pulls](https://img.shields.io/docker/pulls/zixia/wechaty.svg?maxAge=2592000)](https://hub.docker.com/r/zixia/wechaty/) [![TypeScript](https://img.shields.io/badge/<%2F>-TypeScript-blue.svg)](https://www.typescriptlang.org/)
 

@@ -10,8 +10,8 @@ interface ApiCall {
   listener : PendingApiCall[]  // Promise的性质, 等待函数执行完并获得结果
 }
 
-// 
-const EXPIRE_TIME = 10 * 1000
+// Default to timeout if no connection within 20 seconds
+const EXPIRE_TIME = 20 * 1000
 const PRE         = 'DedupeApi'
 
 /**
