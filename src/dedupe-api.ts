@@ -10,7 +10,7 @@ interface ApiCall {
   listener : PendingApiCall[]  // Promise的性质, 等待函数执行完并获得结果
 }
 
-// 为了避免
+// 
 const EXPIRE_TIME = 10 * 1000
 const PRE         = 'DedupeApi'
 
