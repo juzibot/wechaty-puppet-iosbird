@@ -12,11 +12,11 @@
 
 更多功能包括：
 
-* 消息处理：关键词回复
-* 群管理：自动入群，拉人，踢人
-* 自动处理好友请求
-* 智能对话：通过简单配置，即可加入智能对话系统，完成指定任务
-* ... 请自行开脑洞
+  * 消息处理：关键词回复
+  * 群管理：自动入群，拉人，踢人
+  * 自动处理好友请求
+  * 智能对话：通过简单配置，即可加入智能对话系统，完成指定任务
+  * ... 请自行开脑洞
 
 详情请看[Wechaty](https://github.com/chatie/wechaty)项目 [![NPM Version](https://badge.fury.io/js/wechaty.svg)](https://badge.fury.io/js/wechaty) [![Docker Pulls](https://img.shields.io/docker/pulls/zixia/wechaty.svg?maxAge=2592000)](https://hub.docker.com/r/zixia/wechaty/) [![TypeScript](https://img.shields.io/badge/<%2F>-TypeScript-blue.svg)](https://www.typescriptlang.org/)
 
