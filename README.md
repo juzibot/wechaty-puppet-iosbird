@@ -1,5 +1,6 @@
 # WECHATY-PUPPET-IOSBIRD
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8de1413895464131ae0706d5e0f950ae)](https://app.codacy.com/app/linyimin-bupt/wechaty-puppet-iosbird?utm_source=github.com&utm_medium=referral&utm_content=botorange/wechaty-puppet-iosbird&utm_campaign=Badge_Grade_Dashboard)
 [![Powered by Wechaty](https://img.shields.io/badge/Powered%20By-Wechaty-blue.svg)](https://github.com/chatie/wechaty)
 [![npm version](https://badge.fury.io/js/wechaty-puppet-padpro.svg)](https://badge.fury.io/js/wechaty-puppet-iosbird)
 [![Greenkeeper badge](https://badges.greenkeeper.io/botorange/wechaty-puppet-padpro.svg)](https://greenkeeper.io/)
