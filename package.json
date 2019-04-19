@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-iosbird",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Puppet Iosbird for Wechaty",
   "directories": {
     "test": "tests"
