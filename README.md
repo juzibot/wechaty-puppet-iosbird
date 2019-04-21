@@ -50,6 +50,12 @@ bot
 
 <font  color="#dd0000">运行时， 需要指定环境变量[微信ID](https://github.com/botorange/wechaty-puppet-iosbird/wiki/Jail-Break#查看是否成功并获取微信id)： `BOT_ID`</font>
 
+## 暂时还不支持的功能
+
+- 自动通过好友请求
+- 获取离群消息
+- 发送链接、语音及文件
+
 ## 文档
 
 [https://docs.chatie.io/wechaty](https://docs.chatie.io/wechaty)
