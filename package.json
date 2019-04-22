@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-iosbird",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Puppet Iosbird for Wechaty",
   "directories": {
     "test": "tests"
@@ -80,7 +80,8 @@
   },
   "peerDependencies": {
     "file-box": "^0.8.22",
-    "memory-card": "^0.4.10"
+    "memory-card": "^0.4.10",
+    "wechaty-puppet": "^0.15.1"
   },
   "dependencies": {
     "@types/ws": "^6.0.1",
@@ -101,7 +102,7 @@
     "uuidv4": "^2.0.0",
     "watchdog": "^0.8.10",
     "wechaty": "^0.22.6",
-    "wechaty-puppet": "^0.14.1",
+    "wechaty-puppet": "^0.15.1",
     "ws": "^6.1.2"
   }
 }
