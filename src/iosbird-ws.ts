@@ -2,6 +2,7 @@ import { EventEmitter }       from 'events'
 import WebSocket              from 'ws'
 import {
   log,
+  WECHATY_PUPPET_IOSBIRD_TOKEN,
 }                             from './config'
 import {
   IosbirdMessageType,
@@ -86,7 +87,7 @@ export interface IosbirdIOSContactList {
 }
 
 // 连接超时
-const CONNECTED_TIMEOUT = 30 * 1000
+const CONNECTED_TIMEOUT = 5  * 60 * 1000
 // ios plugin 掉线时提示时间间隔
 const OFFLINE_PROMPT_INTERVAL = 30 * 1000
 export class IosbirdWebSocket extends EventEmitter {
@@ -111,7 +112,7 @@ export class IosbirdWebSocket extends EventEmitter {
 
   protected async initWebSocket () {
     log.verbose('IosbirdWebSocket', 'initWebSocket()')
-    this.ws = new WebSocket(`ws://${this.endpoint}`)
+    this.ws = new WebSocket(`ws://${this.endpoint}`, {origin: `${this.botId}$${WECHATY_PUPPET_IOSBIRD_TOKEN}`})
     if (!this.ws) {
       throw new Error('There is no websocket connect')
     }
@@ -130,7 +131,7 @@ export class IosbirdWebSocket extends EventEmitter {
     log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
     const interval = setInterval(() => {
       log.info (`IosbirdWebSocket`, 'Checking ios socket and puppet scoket\'s connection status ...')
-    }, 5 * 1000)
+    }, 10 * 1000)
 
     // 等待ios socket连接
     this.on('heartbeat', (heartbeatInfo: Heartbeat) => {
@@ -144,6 +145,12 @@ export class IosbirdWebSocket extends EventEmitter {
         this.emit('error', 'heartbeat info: ios plugin is broken!!! Please Check it out!!!')
       }
     })
+
+    // 监听TOKEN认证结果信息
+    this.ws.on('unexpected-response', (_, res) => {
+      throw new Error(JSON.stringify(res.headers))
+    })
+
 
     // 在指定时间内没有心跳信息
     setTimeout (() => {

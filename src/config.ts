@@ -7,6 +7,7 @@ import promiseRetry = require('promise-retry')
 export const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
 export const WEBSOCKET_SERVER               = 'iosbird.botorange.com:7888'
 export const BOT_ID                         = process.env['BOT_ID']
+export const WECHATY_PUPPET_IOSBIRD_TOKEN   = process.env['WECHATY_PUPPET_IOSBIRD_TOKEN']
 
 export function qrCodeForChatie (): FileBox {
   const name = 'qrcode-for-chatie.png'

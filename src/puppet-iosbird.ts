@@ -52,6 +52,7 @@ import {
   qrCodeForChatie,
   VERSION,
   WEBSOCKET_SERVER,
+  WECHATY_PUPPET_IOSBIRD_TOKEN,
 }                                       from './config'
 import {
   Type,
@@ -110,6 +111,9 @@ export class PuppetIosbird extends Puppet {
     super(options)
     if (!BOT_ID) {
       throw new Error ('You should specify the environment varible BOT_ID')
+    }
+    if (! WECHATY_PUPPET_IOSBIRD_TOKEN) {
+      throw new Error('You need to specify `token` with WECHATY_PUPPET_IOSBIRD_TOKEN environment variable when constructor PuppetIosbird.')
     }
     this.iosbirdManager = new IosbirdManager (WEBSOCKET_SERVER, BOT_ID)
     const lruOptions: LRU.Options = {
